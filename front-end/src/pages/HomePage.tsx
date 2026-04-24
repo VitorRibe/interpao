@@ -5,8 +5,7 @@ import {
   Paper, 
   Container,
   Stack,
-  alpha,
-  Chip
+  alpha
 } from '@mui/material';
 import { 
   Code as CodeIcon,
