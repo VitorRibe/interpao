@@ -4,49 +4,112 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#2563eb', // Modern Blue
-      light: '#60a5fa',
-      dark: '#1e40af',
+      main: '#442a22', // primary from design
       contrastText: '#ffffff',
     },
     secondary: {
-      main: '#7c3aed', // Purple
-      light: '#a78bfa',
-      dark: '#5b21b6',
+      main: '#7f5600', // secondary from design
       contrastText: '#ffffff',
     },
+    error: {
+      main: '#ba1a1a',
+    },
     background: {
-      default: '#f8fafc',
+      default: '#faf9f8',
       paper: '#ffffff',
     },
     text: {
-      primary: '#1e293b',
-      secondary: '#64748b',
+      primary: '#1a1c1c',
+      secondary: '#504441',
     },
+    divider: 'rgba(212, 195, 190, 0.3)', // outline-variant/30
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: { fontWeight: 700 },
-    h2: { fontWeight: 700 },
-    h3: { fontWeight: 600 },
-    h4: { fontWeight: 600 },
-    h5: { fontWeight: 600 },
-    h6: { fontWeight: 600 },
-    button: { textTransform: 'none', fontWeight: 500 },
+    fontFamily: '"Kumbh Sans", "Roboto", "Helvetica", "Arial", sans-serif',
+    h1: { 
+      fontFamily: '"Kumbh Sans", sans-serif',
+      fontWeight: 800,
+      letterSpacing: '-0.025em',
+    },
+    h2: { 
+      fontFamily: '"Kumbh Sans", sans-serif',
+      fontWeight: 700,
+    },
+    h3: { 
+      fontFamily: '"Kumbh Sans", sans-serif',
+      fontWeight: 700,
+    },
+    h4: { 
+      fontFamily: '"Kumbh Sans", sans-serif',
+      fontWeight: 700,
+    },
+    h5: { 
+      fontFamily: '"Kumbh Sans", sans-serif',
+      fontWeight: 700,
+    },
+    h6: { 
+      fontFamily: '"Kumbh Sans", sans-serif',
+      fontWeight: 700,
+    },
+    subtitle1: {
+      fontFamily: '"Kumbh Sans", sans-serif',
+    },
+    subtitle2: {
+      fontFamily: '"Kumbh Sans", sans-serif',
+    },
+    body1: {
+      fontFamily: '"Kumbh Sans", sans-serif',
+    },
+    body2: {
+      fontFamily: '"Kumbh Sans", sans-serif',
+    },
+    button: { 
+      fontFamily: '"Kumbh Sans", sans-serif',
+      textTransform: 'uppercase', 
+      fontWeight: 700,
+      letterSpacing: '0.1em',
+    },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 8,
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          padding: '8px 16px',
+          padding: '12px 24px',
+          borderRadius: '8px',
         },
         contained: {
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0px 4px 12px rgba(37, 99, 235, 0.2)',
+            boxShadow: '0px 4px 12px rgba(68, 42, 34, 0.1)',
+            opacity: 0.9,
+          },
+        },
+      },
+    },
+    MuiTextField: {
+      defaultProps: {
+        variant: 'outlined',
+        fullWidth: true,
+      },
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            backgroundColor: '#f4f3f2', // surface-container-low
+            '& fieldset': {
+              border: 'none',
+            },
+            '&:hover fieldset': {
+              border: 'none',
+            },
+            '&.Mui-focused fieldset': {
+              border: 'none',
+            },
+            '&.Mui-focused': {
+              boxShadow: '0 0 0 2px rgba(68, 42, 34, 0.2)',
+            },
           },
         },
       },
@@ -54,7 +117,8 @@ const theme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.05), 0px 1px 2px rgba(0, 0, 0, 0.06)',
+          boxShadow: '0px 32px 64px -12px rgba(68, 42, 34, 0.06)',
+          borderRadius: '12px',
         },
       },
     },
