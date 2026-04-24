@@ -28,19 +28,19 @@ const DashboardPage: React.FC = () => {
       </Typography>
       
       <Grid container spacing={3}>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Paper sx={{ p: 3, textAlign: 'center', height: '100%', bgcolor: 'primary.light', color: 'primary.contrastText' }}>
             <Typography variant="subtitle1">Total Sales</Typography>
             <Typography variant="h3">${data?.totalSales}</Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Paper sx={{ p: 3, textAlign: 'center', height: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText' }}>
             <Typography variant="subtitle1">Active Orders</Typography>
             <Typography variant="h3">{data?.activeOrders}</Typography>
           </Paper>
         </Grid>
-        <Grid item xs={12} sm={4}>
+        <Grid size={{ xs: 12, sm: 4 }}>
           <Paper sx={{ p: 3, textAlign: 'center', height: '100%', bgcolor: 'success.light', color: 'common.white' }}>
             <Typography variant="subtitle1">New Customers</Typography>
             <Typography variant="h3">{data?.newCustomers}</Typography>
