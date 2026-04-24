@@ -1,0 +1,48 @@
+[project]
+name = "back-end"
+version = "0.1.0"
+description = "Interpao Backend API"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "apscheduler>=3.11.2",
+    "asyncpg>=0.31.0",
+    "bcrypt>=5.0.0",
+    "celery>=5.6.3",
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+    "psycopg2-binary>=2.9.12",
+    "psycopg[binary]>=3.3.3",
+    "pydantic-settings>=2.14.0",
+    "pyjwt>=2.12.1",
+    "redis>=7.4.0",
+    "sqlalchemy>=2.0.0",
+    "supabase>=2.29.0",
+    "uvicorn[standard]>=0.46.0",
+]
+
+[dependency-groups]
+dev = [
+    "pyright>=1.1.409",
+    "pytest>=9.0.3",
+    "pytest-asyncio>=1.3.0",
+    "ruff>=0.15.12",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "B", "UP", "PL", "RUF"]
+ignore = ["E501"]
+
+[tool.pyright]
+include = ["app"]
+exclude = ["**/__pycache__", "tests"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
