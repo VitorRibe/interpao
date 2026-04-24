@@ -1,24 +1,5 @@
-version: '3.8'
-
 services:
   # --- INFRASTRUCTURE ---
-  db:
-    image: supabase/postgres:15.1.0.117
-    container_name: interpao-db
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-interpao}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    ports:
-      - "5432:5432"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   redis:
     image: redis:7-alpine
     container_name: interpao-redis
@@ -29,30 +10,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  # --- SUPABASE SERVICES (Minimal Self-Hosted) ---
-  # These provide the "Supabase" layer atop Postgres
-  supabase-rest:
-    image: postgrest/postgrest:v11.2.2
-    container_name: interpao-supabase-rest
-    environment:
-      PGRST_DB_URI: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-interpao}
-      PGRST_DB_SCHEMA: public
-      PGRST_DB_ANON_ROLE: anon
-    depends_on:
-      db:
-        condition: service_healthy
-
-  supabase-auth:
-    image: supabase/gotrue:v2.132.3
-    container_name: interpao-supabase-auth
-    environment:
-      GOTRUE_DB_DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-interpao}
-      GOTRUE_JWT_SECRET: ${SECRET_KEY:-secret-key-change-me}
-      GOTRUE_SITE_URL: http://localhost:3000
-    depends_on:
-      db:
-        condition: service_healthy
+    networks:
+      - interpao-network
 
   # --- BACKEND ---
   api:
@@ -64,21 +23,18 @@ services:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-interpao}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - SUPABASE_URL=http://supabase-rest:3000
-      - SUPABASE_KEY=${SUPABASE_KEY:-your-anon-key-here}
-      - SECRET_KEY=${SECRET_KEY:-secret-key-change-me}
+      - SUPABASE_URL=http://rest:3000
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SECRET_KEY=${SECRET_KEY}
     ports:
       - "8000:8000"
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      supabase-rest:
-        condition: service_started
+      - redis
+    networks:
+      - interpao-network
 
   worker:
     build:
@@ -90,13 +46,12 @@ services:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-interpao}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - REDIS_HOST=redis
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - redis
+    networks:
+      - interpao-network
 
   beat:
     build:
@@ -108,13 +63,12 @@ services:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-interpao}
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - REDIS_HOST=redis
     depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - redis
+    networks:
+      - interpao-network
 
   # --- FRONTEND ---
   frontend:
@@ -124,8 +78,10 @@ services:
     container_name: interpao-frontend
     ports:
       - "3000:80"
-    depends_on:
-      - api
+    networks:
+      - interpao-network
 
-volumes:
-  db_data:
+networks:
+  interpao-network:
+    external: true
+    name: interpao-network
