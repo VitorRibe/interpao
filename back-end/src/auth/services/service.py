@@ -45,4 +45,4 @@ class AuthService:
 
     def generate_jwt_for_user(self, user: User) -> str:
         dto = self.build_logged_user_dto(user)
-        return create_access_token(data=dto.model_dump())
+        return create_access_token(data=dto.model_dump(mode='json'))
