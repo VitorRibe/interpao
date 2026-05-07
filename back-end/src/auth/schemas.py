@@ -1,0 +1,26 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from uuid import UUID
+
+class CompanyDTO(BaseModel):
+    id: UUID
+    name: str
+    image_url: Optional[str]
+
+class LoggedUserDTO(BaseModel):
+    id: UUID
+    email: EmailStr
+    name: str
+    phone: Optional[str]
+    image_url: Optional[str]
+    is_admin: bool
+    is_superuser: bool
+    company: CompanyDTO
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"

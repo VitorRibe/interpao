@@ -1,10 +1,9 @@
 from fastapi import APIRouter
+from src.auth.routes import router as auth_router
 
 api_router = APIRouter()
 
-# Example router inclusion
-# from app.api.api_v1.endpoints import items
-# api_router.include_router(items.router, prefix="/items", tags=["items"])
+api_router.include_router(auth_router)
 
 @api_router.get("/health-check")
 async def health_check():
