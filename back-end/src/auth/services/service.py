@@ -27,13 +27,13 @@ class AuthService:
             company=company_dto
         )
 
-    async def create_auth_session(self, user: User) -> str:
+    async def create_auth_session(self, user: User) -> uuid.UUID:
         """Enforce 'Single Active Session' and create a new session."""
         # 1. Delete old sessions for this user
         await self.repository.delete_all_user_sessions(user.id)
         
         # 2. Create new session ID
-        session_id = str(uuid.uuid4())
+        session_id = uuid.uuid4()
         
         # 3. Set expiration (e.g., 7 days)
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)

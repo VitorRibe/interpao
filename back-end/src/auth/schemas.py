@@ -1,13 +1,14 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from uuid import UUID
 
 class CompanyDTO(BaseModel):
-    id: int
+    id: UUID
     name: str
     image_url: Optional[str]
 
 class LoggedUserDTO(BaseModel):
-    id: int
+    id: UUID
     email: EmailStr
     name: str
     phone: Optional[str]

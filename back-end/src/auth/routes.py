@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, Depends, Response, Cookie, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_async_db
@@ -25,7 +26,7 @@ async def login(
     # Set session_id cookie
     response.set_cookie(
         key="session_id",
-        value=session_id,
+        value=str(session_id),
         httponly=True,
         secure=True, # In production this should be True
         samesite="lax",
@@ -42,8 +43,13 @@ async def refresh(
     if not session_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session cookie missing")
     
+    try:
+        session_uuid = uuid.UUID(session_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session ID format")
+
     repository = AuthRepository(db)
-    session = await repository.get_session(session_id)
+    session = await repository.get_session(session_uuid)
     
     if not session or session.expires_at < datetime.now(timezone.utc):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired session")
@@ -64,8 +70,12 @@ async def logout(
     db: AsyncSession = Depends(get_async_db)
 ):
     if session_id:
-        repository = AuthRepository(db)
-        await repository.delete_session(session_id)
+        try:
+            session_uuid = uuid.UUID(session_id)
+            repository = AuthRepository(db)
+            await repository.delete_session(session_uuid)
+        except ValueError:
+            pass # Ignore invalid UUID on logout
     
     response.delete_cookie("session_id")
     return {"message": "Logged out successfully"}
