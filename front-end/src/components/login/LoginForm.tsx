@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Box, 
   Button, 
   TextField, 
   Link, 
   Stack,
-  InputLabel
+  InputLabel,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { authApi } from '../../api/auth';
 
 const StyledLabel = styled(InputLabel)(({ theme }) => ({
   fontFamily: '"Kumbh Sans", sans-serif',
@@ -74,24 +77,60 @@ const LoginButton = styled(Button)(({ theme }) => ({
   '&:active': {
     transform: 'scale(0.98)',
   },
+  '&:disabled': {
+    backgroundColor: 'rgba(68, 42, 34, 0.5)',
+    color: 'rgba(255, 255, 255, 0.7)',
+  }
 }));
 
-const LoginForm: React.FC = () => {
-  const handleSubmit = (event: React.FormEvent) => {
+interface LoginFormProps {
+  onSuccess: () => void;
+}
+
+const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await authApi.login({ email, password });
+      localStorage.setItem('token', response.access_token);
+      onSuccess();
+    } catch (err: any) {
+      console.error('Login error:', err);
+      setError(err.response?.data?.detail || 'Ocorreu um erro ao fazer login. Verifique suas credenciais.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%', mt: 2 }}>
       <Stack spacing={2.5}>
+        {error && (
+          <Alert severity="error" sx={{ borderRadius: '8px', fontSize: '0.8rem' }}>
+            {error}
+          </Alert>
+        )}
+        
         <Box>
-          <StyledLabel htmlFor="username">E-mail ou Usuário</StyledLabel>
+          <StyledLabel htmlFor="email">E-mail ou Usuário</StyledLabel>
           <StyledTextField
-            id="username"
-            name="username"
+            id="email"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             placeholder="exemplo@interpao.com.br"
             variant="outlined"
             fullWidth
+            required
           />
         </Box>
 
@@ -104,15 +143,23 @@ const LoginForm: React.FC = () => {
             id="password"
             name="password"
             type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             variant="outlined"
             fullWidth
+            required
           />
         </Box>
 
         <Box sx={{ pt: 1 }}>
-          <LoginButton variant="contained" fullWidth type="submit">
-            LOGIN
+          <LoginButton 
+            variant="contained" 
+            fullWidth 
+            type="submit" 
+            disabled={loading}
+          >
+            {loading ? <CircularProgress size={20} color="inherit" /> : 'LOGIN'}
           </LoginButton>
         </Box>
       </Stack>

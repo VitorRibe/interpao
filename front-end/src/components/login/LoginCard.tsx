@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Paper, Typography, Divider, Stack } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { CheckCircleOutlined as CheckCircleOutlinedIcon } from '@mui/icons-material';
 import logo from '../../assets/logo.svg';
 import LoginForm from './LoginForm';
 
@@ -41,37 +42,70 @@ const DividerText = styled(Typography)({
   whiteSpace: 'nowrap',
 });
 
+const SuccessIcon = styled(CheckCircleOutlinedIcon)(({ theme }) => ({
+  fontSize: '64px',
+  color: theme.palette.success.main,
+  marginBottom: '24px',
+}));
+
 const LoginCard: React.FC = () => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   return (
     <StyledPaper elevation={0}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 3 }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: isLoggedIn ? 0 : 3 }}>
         <LogoContainer>
-          <LogoImage 
-            src={logo} 
-            alt="Inter Pão logo" 
+          <LogoImage
+            src={logo}
+            alt="Inter Pão logo"
           />
         </LogoContainer>
-        <Typography 
-          variant="h3" 
-          sx={{ color: 'primary.main', mb: 0.5, fontSize: '1.5rem', fontWeight: 800 }}
-        >
-          Bem-vindo
-        </Typography>
-        <Typography 
-          variant="body2" 
-          sx={{ color: 'text.secondary', opacity: 0.7, fontSize: '0.8125rem' }}
-        >
-          Acesse sua conta Inter Pão
-        </Typography>
+
+        {isLoggedIn ? (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', py: 4 }}>
+            <SuccessIcon />
+            <Typography
+              variant="h3"
+              sx={{ color: 'primary.main', mb: 1.5, fontSize: '1.5rem', fontWeight: 800 }}
+            >
+              Login Realizado!
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ color: 'text.secondary', opacity: 0.8, fontSize: '0.875rem', maxWidth: '280px' }}
+            >
+              Bem-vindo de volta ao portal Inter Pão. Você será redirecionado em instantes.
+            </Typography>
+          </Box>
+        ) : (
+          <>
+            <Typography
+              variant="h3"
+              sx={{ color: 'primary.main', mb: 0.5, fontSize: '1.5rem', fontWeight: 800 }}
+            >
+              Bem-vindo
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ color: 'text.secondary', opacity: 0.7, fontSize: '0.8125rem' }}
+            >
+              Acesse sua conta Inter Pão
+            </Typography>
+          </>
+        )}
       </Box>
 
-      <LoginForm />
+      {!isLoggedIn && (
+        <>
+          <LoginForm onSuccess={() => setIsLoggedIn(true)} />
 
-      <Stack direction="row" sx={{ alignItems: 'center', width: '100%', mt: 5 }}>
-        <Divider sx={{ flexGrow: 1, borderColor: 'rgba(212, 195, 190, 0.2)' }} />
-        <DividerText>Portal do Colaborador</DividerText>
-        <Divider sx={{ flexGrow: 1, borderColor: 'rgba(212, 195, 190, 0.2)' }} />
-      </Stack>
+          <Stack direction="row" sx={{ alignItems: 'center', width: '100%', mt: 5 }}>
+            <Divider sx={{ flexGrow: 1, borderColor: 'rgba(212, 195, 190, 0.2)' }} />
+            <DividerText>Portal do Colaborador</DividerText>
+            <Divider sx={{ flexGrow: 1, borderColor: 'rgba(212, 195, 190, 0.2)' }} />
+          </Stack>
+        </>
+      )}
     </StyledPaper>
   );
 };
