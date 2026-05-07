@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from utils.jwt_handler import decode_access_token
@@ -20,5 +21,3 @@ class JWTBearerAuthentication(HTTPBearer):
         else:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid authorization code.")
 
-# Note: We need Optional for the return type of __call__
-from typing import Optional
