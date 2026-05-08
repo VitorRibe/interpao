@@ -14,6 +14,10 @@ import {
   Palette as PaletteIcon,
   Devices as DevicesIcon
 } from '@mui/icons-material';
+import { useMinimumLoadingTime } from '../hooks/useMinimumLoadingTime';
+import HomeSkeleton from '../components/skeletons/HomeSkeleton';
+import SkeletonTransition from '../components/skeletons/SkeletonTransition';
+import { useState, useEffect } from 'react';
 
 const TechCard = ({ icon: Icon, name, version, color }: { icon: any, name: string, version: string, color: string }) => (
   <Paper 
@@ -62,6 +66,15 @@ const TechCard = ({ icon: Icon, name, version, color }: { icon: any, name: strin
 );
 
 const HomePage: React.FC = () => {
+  // Mock loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const showSkeleton = useMinimumLoadingTime(isLoading, 200);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   const technologies = [
     { icon: CodeIcon, name: "React", version: "v19.0", color: "#61DAFB" },
     { icon: DevicesIcon, name: "TypeScript", version: "v5.7", color: "#3178C6" },
@@ -72,62 +85,64 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <Container maxWidth="lg" sx={{ px: 3 }}>
-      <Box sx={{ py: { xs: 8, md: 12 }, textAlign: 'center' }}>
-        <Stack spacing={2} sx={{ mb: 10, alignItems: 'center' }}>
-      
-          <Typography 
-            variant="h2" 
-            component="h1" 
+    <SkeletonTransition showSkeleton={showSkeleton} skeleton={<HomeSkeleton />}>
+      <Container maxWidth="lg" sx={{ px: 3 }}>
+        <Box sx={{ py: { xs: 8, md: 12 }, textAlign: 'center' }}>
+          <Stack spacing={2} sx={{ mb: 10, alignItems: 'center' }}>
+        
+            <Typography 
+              variant="h2" 
+              component="h1" 
+              sx={{ 
+                fontWeight: 900, 
+                letterSpacing: '-2px', 
+                fontSize: { xs: '2.5rem', md: '4rem' },
+                color: '#1e293b'
+              }}
+            >
+              Front-End #InterPão
+            </Typography>
+
+          </Stack>
+
+          <Box 
             sx={{ 
-              fontWeight: 900, 
-              letterSpacing: '-2px', 
-              fontSize: { xs: '2.5rem', md: '4rem' },
-              color: '#1e293b'
+              display: 'grid', 
+              gap: 3, 
+              gridTemplateColumns: {
+                xs: '1fr',
+                sm: '1fr 1fr',
+                md: '1fr 1fr 1fr'
+              },
+              mb: 10
             }}
           >
-            Front-End #InterPão
-          </Typography>
+            {technologies.map((tech, index) => (
+              <TechCard key={index} {...tech} />
+            ))}
+          </Box>
 
-        </Stack>
-
-        <Box 
-          sx={{ 
-            display: 'grid', 
-            gap: 3, 
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: '1fr 1fr',
-              md: '1fr 1fr 1fr'
-            },
-            mb: 10
-          }}
-        >
-          {technologies.map((tech, index) => (
-            <TechCard key={index} {...tech} />
-          ))}
+          <Box 
+            sx={{ 
+              p: { xs: 5, md: 8 }, 
+              borderRadius: 8, 
+              bgcolor: '#ffffff', 
+              border: '1px solid',
+              borderColor: 'divider',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+              textAlign: 'center'
+            }}
+          >
+            <Typography variant="h4" gutterBottom sx={{ fontWeight: 900, color: '#1e293b' }}>
+              Pronto para o próximo passo?
+            </Typography>
+            <Typography variant="body1" sx={{ color: '#64748b', maxWidth: 650, mx: 'auto', mb: 0, fontSize: '1.1rem' }}>
+              A arquitetura de diretórios está pronta para receber suas rotas, componentes globais e lógica de negócios.
+            </Typography>
+          </Box>
         </Box>
-
-        <Box 
-          sx={{ 
-            p: { xs: 5, md: 8 }, 
-            borderRadius: 8, 
-            bgcolor: '#ffffff', 
-            border: '1px solid',
-            borderColor: 'divider',
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-            textAlign: 'center'
-          }}
-        >
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 900, color: '#1e293b' }}>
-            Pronto para o próximo passo?
-          </Typography>
-          <Typography variant="body1" sx={{ color: '#64748b', maxWidth: 650, mx: 'auto', mb: 0, fontSize: '1.1rem' }}>
-            A arquitetura de diretórios está pronta para receber suas rotas, componentes globais e lógica de negócios.
-          </Typography>
-        </Box>
-      </Box>
-    </Container>
+      </Container>
+    </SkeletonTransition>
   );
 };
 
