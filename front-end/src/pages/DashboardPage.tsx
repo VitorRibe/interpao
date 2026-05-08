@@ -1,62 +1,72 @@
 import React from 'react';
-import { Typography, Grid, Paper, Box, CircularProgress, Alert } from '@mui/material';
-import { useStats } from '../hooks/useStats';
+import {
+  Box,
+  Typography,
+  Paper,
+  Stack,
+  CircularProgress,
+  Alert,
+} from '@mui/material';
+import { useCurrentUser } from '../hooks/useCurrentUser';
+import { useMinimumLoadingTime } from '../hooks/useMinimumLoadingTime';
+import DashboardSkeleton from '../components/skeletons/DashboardSkeleton';
+import SkeletonTransition from '../components/skeletons/SkeletonTransition';
 
 const DashboardPage: React.FC = () => {
-  const { data, isLoading, isError, error } = useStats();
-
-  if (isLoading) {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 8 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  if (isError) {
-    return (
-      <Alert severity="error">
-        Error loading dashboard data: {(error as Error).message}
-      </Alert>
-    );
-  }
+  const { data: user, isLoading, isError, error } = useCurrentUser();
+  const showSkeleton = useMinimumLoadingTime(isLoading, 200);
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom sx={{ mb: 4 }}>
-        Dashboard Overview
-      </Typography>
-      
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Paper sx={{ p: 3, textAlign: 'center', height: '100%', bgcolor: 'primary.light', color: 'primary.contrastText' }}>
-            <Typography variant="subtitle1">Total Sales</Typography>
-            <Typography variant="h3">${data?.totalSales}</Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Paper sx={{ p: 3, textAlign: 'center', height: '100%', bgcolor: 'secondary.light', color: 'secondary.contrastText' }}>
-            <Typography variant="subtitle1">Active Orders</Typography>
-            <Typography variant="h3">{data?.activeOrders}</Typography>
-          </Paper>
-        </Grid>
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <Paper sx={{ p: 3, textAlign: 'center', height: '100%', bgcolor: 'success.light', color: 'common.white' }}>
-            <Typography variant="subtitle1">New Customers</Typography>
-            <Typography variant="h3">{data?.newCustomers}</Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ mt: 4 }}>
-        <Paper sx={{ p: 3 }}>
-          <Typography variant="h6" gutterBottom>Recent Activity</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Data fetched using TanStack Query. Refetching and state management are handled automatically.
-          </Typography>
+    <SkeletonTransition showSkeleton={showSkeleton} skeleton={<DashboardSkeleton />}>
+      <Box sx={{ minHeight: 'calc(100vh - 160px)', display: 'flex' }}>
+        <Paper
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            p: { xs: 4, md: 8 },
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #ffffff 0%, #faf9f8 100%)',
+            border: '1px solid',
+            borderColor: 'divider',
+            borderRadius: 8,
+            boxShadow: '0px 32px 64px -12px rgba(68, 42, 34, 0.04)',
+          }}
+        >
+          <Stack spacing={3} alignItems="center">
+            <Box>
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 900,
+                  color: 'primary.main',
+                  mb: 1,
+                  fontFamily: '"Manrope", sans-serif',
+                }}
+              >
+                Olá, {user?.name?.split(' ')[0] || 'Colaborador'}!
+              </Typography>
+              {user?.company?.name && (
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    color: 'secondary.main',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    fontSize: '0.875rem',
+                  }}
+                >
+                  {user.company.name}
+                </Typography>
+              )}
+            </Box>
+          </Stack>
         </Paper>
       </Box>
-    </Box>
+    </SkeletonTransition>
   );
 };
 

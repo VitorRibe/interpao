@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, Divider, Stack } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { CheckCircleOutlined as CheckCircleOutlinedIcon } from '@mui/icons-material';
@@ -50,6 +51,17 @@ const SuccessIcon = styled(CheckCircleOutlinedIcon)(({ theme }) => ({
 
 const LoginCard: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const timer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoggedIn, navigate]);
+
 
   return (
     <StyledPaper elevation={0}>

@@ -13,7 +13,6 @@ import { styled } from '@mui/material/styles';
 import { authApi } from '../../api/auth';
 
 const StyledLabel = styled(InputLabel)(({ theme }) => ({
-  fontFamily: '"Kumbh Sans", sans-serif',
   fontSize: '9px',
   fontWeight: 800,
   color: theme.palette.primary.main,
@@ -51,7 +50,6 @@ const StyledTextField = styled(TextField)({
   '& .MuiInputBase-input': {
     padding: '14px 16px',
     fontSize: '0.875rem',
-    fontFamily: '"Kumbh Sans", sans-serif',
     color: '#442a22',
     '&::placeholder': {
       color: 'rgba(68, 42, 34, 0.3)',
