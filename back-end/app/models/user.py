@@ -18,6 +18,8 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(default=True)
     is_admin: Mapped[bool] = mapped_column(default=False)
     is_superuser: Mapped[bool] = mapped_column(default=False)
+    id_setor: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("setor.id_setor"))
+    cargo: Mapped[Optional[str]] = mapped_column()
     
     id_setor: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("public.setor.id_setor")) # Atualize a ForeignKey também!
     setor: Mapped[Optional["Setor"]] = relationship("Setor", back_populates="usuarios")
