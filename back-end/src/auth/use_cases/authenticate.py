@@ -21,9 +21,9 @@ class AuthenticateUseCase:
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        # 3. Check user and company status
+        # 3. Check user and setor status
         self.policy_service.check_user_active(user)
-        self.policy_service.check_company_status(user)
+        self.policy_service.check_setor_exists(user)
         
         # 4. Create session (Enforces Single Active Session)
         session_id = await self.auth_service.create_auth_session(user)
