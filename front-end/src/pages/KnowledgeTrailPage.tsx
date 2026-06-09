@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -12,83 +12,21 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useMinimumLoadingTime } from '../hooks/useMinimumLoadingTime';
+import { useTrilhas } from '../hooks/useContent';
+import type { TrilhaSummary } from '../types';
 import KnowledgeTrailSkeleton from '../components/skeletons/KnowledgeTrailSkeleton';
 import SkeletonTransition from '../components/skeletons/SkeletonTransition';
 
-const modules = [
-  {
-    id: 1,
-    title: 'História & Valores',
-    description: 'A origem da Inter Pão e nossa missão de entregar qualidade superior.',
-    category: 'CULTURA',
-    time: '15 MIN',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk',
-    color: '#7f5600',
-  },
-  {
-    id: 2,
-    title: 'Domínio da massa',
-    description: 'O passo a passo da nossa receita mais amada, do preparo ao forno.',
-    category: 'RECEITAS',
-    time: '45 MIN',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk',
-    color: '#442a22',
-  },
-  {
-    id: 3,
-    title: 'Higiene e Manipulação',
-    description: 'Protocolos de segurança alimentar e organização do espaço de trabalho.',
-    category: 'PROCESSOS',
-    time: '30 MIN',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk',
-    color: '#e3e2e1',
-  },
-  {
-    id: 4,
-    title: 'Operação de Fornos',
-    description: 'Manual técnico para controle de temperatura e tempos de cocção ideais.',
-    category: 'PROCESSOS',
-    time: '20 MIN',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk',
-    color: '#ffdad6',
-  },
-  {
-    id: 5,
-    title: 'Seleção de Insumos',
-    description: 'Conheça os fornecedores e o rigor na escolha de cada matéria-prima.',
-    category: 'RECEITAS',
-    time: '25 MIN',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk',
-    color: '#5d4037',
-  },
-  {
-    id: 6,
-    title: 'Cultura de Excelência',
-    description: 'Nosso compromisso com a satisfação do cliente em cada detalhe.',
-    category: 'CULTURA',
-    time: '20 MIN',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk',
-    color: '#7f5600',
-  },
-  {
-    id: 7,
-    title: 'Finalização e Exposição',
-    description: 'Como apresentar nossos produtos para encantar os olhos e o paladar.',
-    category: 'PROCESSOS',
-    time: '15 MIN',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk',
-    color: '#e3e2e1',
-  },
-];
+// Fallback cover used while trilhas don't carry their own image field.
+const DEFAULT_COVER =
+  'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk';
 
-const filters = [
-  { label: 'Ver Tudo', value: 'VER TUDO' },
-  { label: 'Receitas', value: 'RECEITAS' },
-  { label: 'Processos', value: 'PROCESSOS' },
-  { label: 'Cultura', value: 'CULTURA' },
-];
+// Brand palette cycled across cards so each trilha keeps a consistent accent.
+const ACCENT_COLORS = ['#7f5600', '#442a22', '#5d4037', '#6d4a00', '#ffb632'];
 
 const FOOTER_HEIGHT = 80;
+
+const ALL_FILTER = 'VER TUDO';
 
 // ── Shared card component – locked and unlocked have identical DOM structure ──
 interface ModuleCardProps {
@@ -271,27 +209,38 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   );
 };
 
+// ── Map a Trilha DTO onto the card's visual props ──────────────────────────────
+const trilhaCategory = (t: TrilhaSummary) => (t.setor?.nome ?? 'GERAL').toUpperCase();
+
+const trilhaTime = (t: TrilhaSummary) => {
+  if (t.carga_hor) return `${t.carga_hor} H`;
+  return `${t.module_count} ${t.module_count === 1 ? 'MÓDULO' : 'MÓDULOS'}`;
+};
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 const KnowledgeTrailPage: React.FC = () => {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState('VER TUDO');
-  
-  // Mock loading state for demonstration as this page is currently static
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState(ALL_FILTER);
+
+  const { data: trilhas, isLoading, isError } = useTrilhas();
   const showSkeleton = useMinimumLoadingTime(isLoading, 200);
 
-  // Auto-finish mock loading
-  React.useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 100);
-    return () => clearTimeout(timer);
-  }, []);
+  // Filters are derived from the setores that actually exist in the data.
+  const filters = useMemo(() => {
+    const categories = new Set<string>();
+    (trilhas ?? []).forEach((t) => categories.add(trilhaCategory(t)));
+    return [ALL_FILTER, ...Array.from(categories).sort()];
+  }, [trilhas]);
 
-  const filteredModules =
-    activeFilter === 'VER TUDO' ? modules : modules.filter((m) => m.category === activeFilter);
+  const filteredTrilhas = useMemo(() => {
+    const list = trilhas ?? [];
+    if (activeFilter === ALL_FILTER) return list;
+    return list.filter((t) => trilhaCategory(t) === activeFilter);
+  }, [trilhas, activeFilter]);
 
-  const totalModules = modules.length;
-  const completedModules = 0;
-  const progressPct = Math.round((completedModules / totalModules) * 100);
+  const totalTrilhas = trilhas?.length ?? 0;
+  const completedTrilhas = 0; // Progress tracking lands with the user_trilha endpoints.
+  const progressPct = totalTrilhas ? Math.round((completedTrilhas / totalTrilhas) * 100) : 0;
 
   return (
     <SkeletonTransition showSkeleton={showSkeleton} skeleton={<KnowledgeTrailSkeleton />}>
@@ -299,11 +248,6 @@ const KnowledgeTrailPage: React.FC = () => {
 
         {/* Scrollable content */}
         <Box sx={{ flex: 1, overflowY: 'auto', pt: 3, pb: `${FOOTER_HEIGHT + 24}px` }}>
-
-          {/*
-            One shared px wrapper. Both the header Paper and the CSS grid
-            sit inside it, so their outer edges are identical — no offset.
-          */}
           <Box sx={{ px: { xs: 2, md: 4 } }}>
 
             {/* Header */}
@@ -332,76 +276,98 @@ const KnowledgeTrailPage: React.FC = () => {
               <Box sx={{ display: 'flex', gap: 1, p: 0.5, bgcolor: '#eeeeed', borderRadius: '12px', flexWrap: 'wrap' }}>
                 {filters.map((f) => (
                   <Button
-                    key={f.value}
+                    key={f}
                     size="small"
-                    onClick={() => setActiveFilter(f.value)}
+                    onClick={() => setActiveFilter(f)}
                     sx={{
-                      bgcolor: activeFilter === f.value ? 'white' : 'transparent',
-                      color: activeFilter === f.value ? 'secondary.main' : 'text.secondary',
-                      boxShadow: activeFilter === f.value ? '0px 1px 2px rgba(0,0,0,0.05)' : 'none',
-                      '&:hover': { bgcolor: activeFilter === f.value ? 'white' : 'rgba(255,255,255,0.5)' },
+                      bgcolor: activeFilter === f ? 'white' : 'transparent',
+                      color: activeFilter === f ? 'secondary.main' : 'text.secondary',
+                      boxShadow: activeFilter === f ? '0px 1px 2px rgba(0,0,0,0.05)' : 'none',
+                      '&:hover': { bgcolor: activeFilter === f ? 'white' : 'rgba(255,255,255,0.5)' },
                       px: { xs: 2, md: 3 },
                       fontSize: '0.75rem',
-                      fontWeight: activeFilter === f.value ? 800 : 600,
+                      fontWeight: activeFilter === f ? 800 : 600,
                       transition: 'all 0.2s ease',
                     }}
                   >
-                    {f.label}
+                    {f === ALL_FILTER ? 'Ver Tudo' : f}
                   </Button>
                 ))}
               </Box>
             </Paper>
 
-            {/*
-              Native CSS grid.
-              - `display: grid` with `grid-template-columns: repeat(N, 1fr)` is the
-                only layout that guarantees all columns are exactly the same width.
-              - MUI <Grid container> adds a negative margin equal to half the spacing
-                on each side of the container, which makes the grid wider than its
-                parent by `spacing` px and causes the first column to appear wider
-                when the parent clips the overflow. Using a plain Box with CSS grid
-                avoids all of that.
-            */}
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: {
-                  xs: '1fr',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(3, 1fr)',
-                  lg: 'repeat(4, 1fr)',
-                },
-                gap: '24px',
-              }}
-            >
-              {filteredModules.map((m) => (
-                <ModuleCard
-                  key={m.id}
-                  title={m.title}
-                  description={m.description}
-                  category={m.category}
-                  time={m.time}
-                  image={m.image}
-                  color={m.color}
-                  isLocked={m.id > 1}
-                  onClick={() => navigate(`/curso/${m.id}`)}
-                />
-              ))}
+            {/* Error state */}
+            {isError && (
+              <Paper sx={{ p: 4, textAlign: 'center', borderRadius: '16px', border: '1px solid rgba(186,26,26,0.2)' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 40, color: '#ba1a1a', opacity: 0.6 }}>
+                  error
+                </span>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main', mt: 1 }}>
+                  Não foi possível carregar as trilhas
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Verifique sua conexão e tente novamente.
+                </Typography>
+              </Paper>
+            )}
 
-              {activeFilter === 'VER TUDO' && (
-                <ModuleCard
-                  title="Certificação Final"
-                  description="Complete todos os conteúdos para obter seu certificado."
-                  category=""
-                  time=""
-                  image={modules[0].image}
-                  color=""
-                  isLocked
-                  isCert
-                />
-              )}
-            </Box>
+            {/* Empty state */}
+            {!isError && totalTrilhas === 0 && (
+              <Paper sx={{ p: 6, textAlign: 'center', borderRadius: '16px', border: '1px dashed rgba(212,195,190,0.6)', bgcolor: 'transparent' }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 44, color: '#7f5600', opacity: 0.4 }}>
+                  route
+                </span>
+                <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main', mt: 1 }}>
+                  Nenhuma trilha disponível ainda
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                  Assim que um administrador publicar conteúdo, ele aparecerá aqui.
+                </Typography>
+              </Paper>
+            )}
 
+            {/* Grid */}
+            {totalTrilhas > 0 && (
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: 'repeat(2, 1fr)',
+                    md: 'repeat(3, 1fr)',
+                    lg: 'repeat(4, 1fr)',
+                  },
+                  gap: '24px',
+                }}
+              >
+                {filteredTrilhas.map((t, i) => (
+                  <ModuleCard
+                    key={t.id_trilha}
+                    title={t.titulo}
+                    description={t.descricao ?? 'Trilha de aprendizado da Inter Pão.'}
+                    category={trilhaCategory(t)}
+                    time={trilhaTime(t)}
+                    image={DEFAULT_COVER}
+                    color={ACCENT_COLORS[i % ACCENT_COLORS.length]}
+                    isLocked={false}
+                    onClick={() => navigate(`/curso/${t.id_trilha}`)}
+                  />
+                ))}
+
+                {activeFilter === ALL_FILTER && (
+                  <ModuleCard
+                    title="Certificação Final"
+                    description="Complete todos os conteúdos para obter seu certificado."
+                    category=""
+                    time=""
+                    image={DEFAULT_COVER}
+                    color=""
+                    isLocked
+                    isCert
+                  />
+                )}
+              </Box>
+            )}
           </Box>
         </Box>
 
@@ -422,10 +388,10 @@ const KnowledgeTrailPage: React.FC = () => {
         >
           <Box sx={{ flexShrink: 0 }}>
             <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', opacity: 0.6, letterSpacing: '0.08em', display: 'block', mb: 0.25, fontSize: '10px' }}>
-              MÓDULOS CONCLUÍDOS
+              TRILHAS CONCLUÍDAS
             </Typography>
             <Typography variant="subtitle1" sx={{ fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>
-              {completedModules} / {totalModules}
+              {completedTrilhas} / {totalTrilhas}
             </Typography>
           </Box>
 
