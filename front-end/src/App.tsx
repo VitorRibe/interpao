@@ -4,7 +4,9 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import KnowledgeTrailPage from './pages/KnowledgeTrailPage';
 import CourseContentPage from './pages/CourseContentPage';
+import AdminContentPage from './pages/AdminContentPage';
 import Layout from './components/Layout';
+import RequireAdmin from './components/RequireAdmin';
 
 function App() {
   return (
@@ -18,6 +20,14 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/trilha" element={<KnowledgeTrailPage />} />
         <Route path="/curso/:id" element={<CourseContentPage />} />
+        <Route
+          path="/admin/conteudo"
+          element={
+            <RequireAdmin>
+              <AdminContentPage />
+            </RequireAdmin>
+          }
+        />
         {/* Placeholder for other routes */}
         <Route path="/receita" element={<div>Receita Content</div>} />
         <Route path="/escala" element={<div>Escala Content</div>} />

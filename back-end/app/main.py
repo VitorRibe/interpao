@@ -16,6 +16,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    docs_url=f"{settings.API_V1_STR}/docs",
+    redoc_url=f"{settings.API_V1_STR}/redoc",
     lifespan=lifespan,
 )
 
@@ -32,4 +34,4 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Interpao API", "docs": "/docs"}
+    return {"message": "Welcome to Interpao API", "docs": f"{settings.API_V1_STR}/docs"}
