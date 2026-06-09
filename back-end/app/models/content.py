@@ -19,6 +19,7 @@ class Setor(Base):
     nome: Mapped[str] = mapped_column(Text)
 
     trilhas: Mapped[list["Trilha"]] = relationship("Trilha", back_populates="setor")
+    usuarios: Mapped[list["User"]] = relationship("User", back_populates="setor")
 
 
 class Trilha(Base):

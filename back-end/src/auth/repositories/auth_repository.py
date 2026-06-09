@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
 from app.models.user import User
-from app.models.setor import Setor
+from app.models.content import Setor
 from app.models.session import Session
 from datetime import datetime, timezone
 from typing import Optional
