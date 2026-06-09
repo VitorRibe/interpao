@@ -2,7 +2,16 @@ import uuid
 from fastapi import APIRouter, Depends, Response, Cookie, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_async_db
-from src.auth.schemas import LoginRequest, TokenResponse, LoggedUserDTO
+from src.auth.schemas import (
+    LoginRequest, 
+    TokenResponse, 
+    LoggedUserDTO,
+    UserRegisterRequest,
+    UserRegisterResponse,
+    PasswordResetRequest,
+    PasswordResetConfirm,
+    PasswordResetResponse,
+)
 from src.auth.repositories.auth_repository import AuthRepository
 from src.auth.services.service import AuthService
 from src.auth.use_cases.authenticate import AuthenticateUseCase
@@ -83,3 +92,74 @@ async def logout(
 @router.get("/current_user", response_model=LoggedUserDTO)
 async def current_user(user: LoggedUserDTO = Depends(ValidateUserAccess)):
     return user
+
+# ==========================================
+# User Registration Routes
+# ==========================================
+
+@router.post("/register", response_model=LoggedUserDTO)
+async def register(
+    request: "UserRegisterRequest",
+    db: AsyncSession = Depends(get_async_db)
+):
+    """Register a new user."""
+    from src.auth.repositories.setor_repository import SetorRepository
+    from src.auth.use_cases.register import RegisterUseCase
+    
+    auth_repository = AuthRepository(db)
+    setor_repository = SetorRepository(db)
+    auth_service = AuthService(auth_repository)
+    use_case = RegisterUseCase(auth_repository, setor_repository, auth_service)
+    
+    user = await use_case.execute_register(
+        email=request.email,
+        password=request.password,
+        name=request.name,
+        id_setor=request.id_setor,
+        phone=request.phone,
+    )
+    
+    return auth_service.build_logged_user_dto(user)
+
+# ==========================================
+# Password Reset Routes
+# ==========================================
+
+@router.post("/password-reset")
+async def password_reset_request(
+    request: "PasswordResetRequest",
+    db: AsyncSession = Depends(get_async_db)
+):
+    """Request password reset (sends email with token)."""
+    from src.auth.repositories.setor_repository import SetorRepository
+    from src.auth.use_cases.password_reset import PasswordResetRequestUseCase
+    
+    auth_repository = AuthRepository(db)
+    setor_repository = SetorRepository(db)
+    auth_service = AuthService(auth_repository)
+    use_case = PasswordResetRequestUseCase(auth_repository, setor_repository, auth_service)
+    
+    token, expires_at = await use_case.execute_request(request.email)
+    
+    # TODO: Send password reset email
+    # await send_password_reset_email(request.email, token)
+
+    return {"message": "Password reset email sent. Check your inbox."}
+
+@router.post("/password-reset/confirm")
+async def password_reset_confirm(
+    request: "PasswordResetConfirm",
+    db: AsyncSession = Depends(get_async_db)
+):
+    """Confirm password reset with token."""
+    from src.auth.repositories.setor_repository import SetorRepository
+    from src.auth.use_cases.password_reset import PasswordResetConfirmUseCase
+    
+    auth_repository = AuthRepository(db)
+    setor_repository = SetorRepository(db)
+    auth_service = AuthService(auth_repository)
+    use_case = PasswordResetConfirmUseCase(auth_repository, setor_repository, auth_service)
+
+    user = await use_case.execute_confirm(request.token, request.new_password)
+
+    return {"message": "Password reset successfully."}
