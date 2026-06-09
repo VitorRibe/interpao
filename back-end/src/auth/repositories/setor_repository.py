@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.models.setor import Setor
+from app.models.content import Setor
 from typing import Optional
 import uuid
 
