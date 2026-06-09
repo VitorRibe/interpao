@@ -10,6 +10,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../../api/auth';
 
 const StyledLabel = styled(InputLabel)(({ theme }) => ({
@@ -90,6 +91,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -99,6 +101,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
     try {
       const response = await authApi.login({ email, password });
       localStorage.setItem('token', response.access_token);
+      // Drop any user cached from a previous session so the fresh token
+      // (with the current is_admin flag) is refetched on the next screen.
+      queryClient.removeQueries({ queryKey: ['current-user'] });
       onSuccess();
     } catch (err: any) {
       console.error('Login error:', err);
