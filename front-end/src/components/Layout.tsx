@@ -19,6 +19,7 @@ import {
   Button,
 } from '@mui/material';
 import { useCurrentUser } from '../hooks/useCurrentUser';
+import { useLogout } from '../hooks/useLogout';
 
 const SIDEBAR_WIDTH = 288;
 
@@ -27,6 +28,7 @@ const Layout: React.FC = () => {
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { data: user } = useCurrentUser();
+  const logout = useLogout();
 
   const getInitials = (name: string | undefined) => {
     if (!name) return 'JS';
@@ -138,8 +140,7 @@ const Layout: React.FC = () => {
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton
-              component={RouterLink}
-              to="/login"
+              onClick={() => { void logout(); }}
               sx={{
                 borderRadius: 2,
                 px: 2,
