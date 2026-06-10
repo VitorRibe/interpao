@@ -2,15 +2,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.api_v1.api import api_router
+from app.db.init_db import init_db
 from app.tasks.scheduler import start_scheduler, shutdown_scheduler
 from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Start APScheduler
+    await init_db()
     start_scheduler()
     yield
-    # Shutdown: Stop APScheduler
     shutdown_scheduler()
 
 app = FastAPI(
