@@ -2,7 +2,7 @@ import uuid
 
 from fastapi import HTTPException, status
 
-from app.models.content import Modulo, Multimidia, Trilha
+from app.models.content import Modulo, Multimidia, Setor, Trilha
 from src.content.repositories.content_repository import ContentRepository
 from src.content.schemas import (
     ModuloCreate,
@@ -24,6 +24,9 @@ class ContentService:
 
     def build_multimidia_dto(self, multimidia: Multimidia) -> MultimidiaDTO:
         return MultimidiaDTO.model_validate(multimidia)
+
+    def build_setor_dto(self, setor: Setor) -> SetorDTO:
+        return SetorDTO.model_validate(setor)
 
     def build_modulo_dto(self, modulo: Modulo) -> ModuloDTO:
         return ModuloDTO(
@@ -83,6 +86,10 @@ class ContentService:
                 detail="Modulo not found",
             )
         return modulo
+
+    async def list_setores(self) -> list[SetorDTO]:
+        setores = await self.repository.list_setores()
+        return [self.build_setor_dto(setor) for setor in setores]
 
     async def list_trilhas(self) -> list[TrilhaSummaryDTO]:
         trilhas = await self.repository.list_trilhas()

@@ -13,6 +13,10 @@ class ContentRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def list_setores(self) -> list[Setor]:
+        result = await self.db.execute(select(Setor).order_by(Setor.nome))
+        return list(result.scalars().all())
+
     async def get_setor(self, id_setor: uuid.UUID) -> Optional[Setor]:
         result = await self.db.execute(select(Setor).where(Setor.id_setor == id_setor))
         return result.scalar_one_or_none()
