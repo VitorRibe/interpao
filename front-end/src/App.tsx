@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage';
 import KnowledgeTrailPage from './pages/KnowledgeTrailPage';
 import CourseContentPage from './pages/CourseContentPage';
 import AdminContentPage from './pages/AdminContentPage';
+import AdminUsersPage from './pages/AdminUsersPage';
 import Layout from './components/Layout';
 import RequireAdmin from './components/RequireAdmin';
 
@@ -25,6 +26,14 @@ function App() {
           element={
             <RequireAdmin>
               <AdminContentPage />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="/admin/usuarios"
+          element={
+            <RequireAdmin>
+              <AdminUsersPage />
             </RequireAdmin>
           }
         />
