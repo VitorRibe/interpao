@@ -17,13 +17,13 @@ class AuthenticateUseCase:
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials",
+                detail="Credenciais inválidas.",
             )
 
         if not PolicyService.verify_credentials(password, user):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials",
+                detail="Credenciais inválidas.",
             )
 
         PolicyService.check_user_active(user)

@@ -16,6 +16,7 @@ import {
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { useSpring, animated } from '@react-spring/web';
 import { useTrilha } from '../hooks/useContent';
+import { saveLastCourse } from './DashboardPage';
 import type { Modulo, Multimidia } from '../types';
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
@@ -244,6 +245,17 @@ const CourseContentPage: React.FC = () => {
   useEffect(() => {
     if (!activeId && modulos.length > 0) setActiveId(modulos[0].id_modulo);
   }, [modulos, activeId]);
+
+  // Persist last visited course for Dashboard "continue" card.
+  useEffect(() => {
+    if (!trilha || !id) return;
+    saveLastCourse({
+      id,
+      title: trilha.titulo,
+      trilhaTitle: trilha.setor?.nome ?? 'Trilha do Conhecimento',
+      path: `/curso/${id}`,
+    });
+  }, [id, trilha]);
 
   // ── IntersectionObserver: update active as user scrolls ──
   useEffect(() => {
