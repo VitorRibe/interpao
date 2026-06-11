@@ -8,6 +8,7 @@ import AdminContentPage from './pages/AdminContentPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import SettingsPage from './pages/SettingsPage';
 import EscalaPage from './pages/EscalaPage';
+import BenefitsPage from './pages/BenefitsPage';
 import Layout from './components/Layout';
 import RequireAdmin from './components/RequireAdmin';
 
@@ -43,7 +44,7 @@ function App() {
         {/* Placeholder for other routes */}
         <Route path="/receita" element={<div>Receita Content</div>} />
         <Route path="/escala" element={<EscalaPage />} />
-        <Route path="/beneficios" element={<div>Benefícios Content</div>} />
+        <Route path="/beneficios" element={<BenefitsPage />} />
       </Route>
     </Routes>
   );
