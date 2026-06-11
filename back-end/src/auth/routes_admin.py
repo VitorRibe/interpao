@@ -219,7 +219,7 @@ async def list_setores_admin(
     
     return {
         "setores": [
-            {"id_setor": s.id_setor, "nome": s.nome, "descricao": s.descricao}
+            {"id_setor": s.id_setor, "nome": s.nome}
             for s in setores
         ]
     }
