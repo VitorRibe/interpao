@@ -2,10 +2,13 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional
 from uuid import UUID
 
-class CompanyDTO(BaseModel):
-    id: UUID
-    name: str
-    image_url: Optional[str]
+# ==========================================
+# DTOs (Data Transfer Objects)
+# ==========================================
+
+class SetorDTO(BaseModel):
+    id_setor: UUID
+    nome: str
 
 class LoggedUserDTO(BaseModel):
     id: UUID
@@ -13,9 +16,14 @@ class LoggedUserDTO(BaseModel):
     name: str
     phone: Optional[str]
     image_url: Optional[str]
+    cargo: Optional[str]
     is_admin: bool
     is_superuser: bool
-    company: CompanyDTO
+    setor: SetorDTO
+
+# ==========================================
+# Authentication Requests/Responses
+# ==========================================
 
 class LoginRequest(BaseModel):
     email: EmailStr
@@ -24,3 +32,83 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
+
+# ==========================================
+# User Registration
+# ==========================================
+
+class UserRegisterRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    phone: Optional[str] = None
+    id_setor: UUID
+
+class UserRegisterResponse(BaseModel):
+    id: UUID
+    email: EmailStr
+    name: str
+    phone: Optional[str]
+    cargo: Optional[str]
+    setor: SetorDTO
+
+# ==========================================
+# Password Reset
+# ==========================================
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+
+class PasswordResetResponse(BaseModel):
+    message: str
+
+# ==========================================
+# Admin Operations
+# ==========================================
+
+class AdminCreateUserRequest(BaseModel):
+    email: EmailStr
+    password: str
+    name: str
+    phone: Optional[str] = None
+    cargo: Optional[str] = None
+    id_setor: UUID
+
+class AdminCreateUserResponse(BaseModel):
+    id: UUID
+    email: EmailStr
+    name: str
+    phone: Optional[str]
+    cargo: Optional[str]
+    setor: SetorDTO
+    is_active: bool
+
+class AdminUpdateUserRequest(BaseModel):
+    email: Optional[EmailStr] = None
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    cargo: Optional[str] = None
+    id_setor: Optional[UUID] = None
+    is_active: Optional[bool] = None
+
+class AdminUpdateUserResponse(BaseModel):
+    id: UUID
+    email: EmailStr
+    name: str
+    phone: Optional[str]
+    cargo: Optional[str]
+    setor: SetorDTO
+    is_active: bool
+
+class AdminResetPasswordRequest(BaseModel):
+    message: str = "Password reset email sent"
+
+class AdminListUsersResponse(BaseModel):
+    total: int
+    page: int
+    size: int
+    users: list["AdminCreateUserResponse"]

@@ -12,6 +12,7 @@ from src.content.schemas import (
     ModuloUpdate,
     MultimidiaCreate,
     MultimidiaDTO,
+    SetorDTO,
     TrilhaCreate,
     TrilhaDTO,
     TrilhaSummaryDTO,
@@ -20,6 +21,16 @@ from src.content.schemas import (
 from src.content.services.service import ContentService
 
 router = APIRouter(prefix="/content", tags=["content"])
+
+
+@router.get("/setores", response_model=list[SetorDTO])
+async def list_setores(
+    db: AsyncSession = Depends(get_async_db),
+    _user=Depends(ValidateUserAccess),
+):
+    repository = ContentRepository(db)
+    service = ContentService(repository)
+    return await service.list_setores()
 
 
 @router.get("/trilhas", response_model=list[TrilhaSummaryDTO])
