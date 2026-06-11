@@ -1,6 +1,7 @@
 import uuid
+from datetime import datetime
 from typing import Optional
-from sqlalchemy import ForeignKey, text
+from sqlalchemy import DateTime, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from .base import Base
 
@@ -17,5 +18,7 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(default=True)
     is_admin: Mapped[bool] = mapped_column(default=False)
     is_superuser: Mapped[bool] = mapped_column(default=False)
+    password_reset_token: Mapped[Optional[str]] = mapped_column(default=None)
+    password_reset_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None)
     id_setor: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("setor.id_setor"))
     setor: Mapped[Optional["Setor"]] = relationship("Setor", back_populates="usuarios")
