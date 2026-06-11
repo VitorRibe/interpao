@@ -106,11 +106,11 @@ const Layout: React.FC = () => {
                   <span className="material-symbols-outlined">{item.icon}</span>
                 </ListItemIcon>
                 <ListItemText
-                  primary={item.label}
-                  primaryTypographyProps={{
-                    fontSize: '0.875rem',
-                    fontWeight: active ? 700 : 500,
-                  }}
+                  primary={
+                    <Typography sx={{ fontSize: '0.875rem', fontWeight: active ? 700 : 500 }}>
+                      {item.label}
+                    </Typography>
+                  }
                 />
               </ListItemButton>
             </ListItem>
@@ -136,8 +136,11 @@ const Layout: React.FC = () => {
                 <span className="material-symbols-outlined">settings</span>
               </ListItemIcon>
               <ListItemText
-                primary="Configurações"
-                primaryTypographyProps={{ fontSize: '0.875rem' }}
+                primary={
+                  <Typography sx={{ fontSize: '0.875rem' }}>
+                    Configurações
+                  </Typography>
+                }
               />
             </ListItemButton>
           </ListItem>
@@ -156,8 +159,11 @@ const Layout: React.FC = () => {
                 <span className="material-symbols-outlined">logout</span>
               </ListItemIcon>
               <ListItemText
-                primary="Sair"
-                primaryTypographyProps={{ fontSize: '0.875rem' }}
+                primary={
+                  <Typography sx={{ fontSize: '0.875rem' }}>
+                    Sair
+                  </Typography>
+                }
               />
             </ListItemButton>
           </ListItem>
@@ -225,15 +231,17 @@ const Layout: React.FC = () => {
                     ? 'Mestria em Fermentação Natural'
                     : location.pathname === '/escala'
                       ? 'Escala de Trabalho'
-                      : location.pathname === '/admin/usuarios'
-                        ? 'Gestão de Usuários'
-                        : location.pathname.startsWith('/admin/')
-                          ? 'Gestão de Conteúdo'
-                          : location.pathname === '/configuracoes'
-                            ? 'Configurações'
-                            : location.pathname === '/beneficios'
-                              ? 'Benefícios'
-                              : 'Dashboard Interativo'}
+                      : location.pathname === '/receita'
+                        ? 'Receitas'
+                        : location.pathname === '/admin/usuarios'
+                          ? 'Gestão de Usuários'
+                          : location.pathname.startsWith('/admin/')
+                            ? 'Gestão de Conteúdo'
+                            : location.pathname === '/configuracoes'
+                              ? 'Configurações'
+                              : location.pathname === '/beneficios'
+                                ? 'Benefícios'
+                                : 'Dashboard Interativo'}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 0.5 }}>
                 <Typography
@@ -251,13 +259,15 @@ const Layout: React.FC = () => {
                       ? 'EDUCAÇÃO TÉCNICA'
                       : location.pathname === '/escala'
                         ? 'ITINERÁRIO DETALHADO'
-                        : location.pathname.startsWith('/admin/')
-                          ? 'PAINEL ADMINISTRATIVO'
-                          : location.pathname === '/configuracoes'
-                            ? 'MINHA CONTA'
-                            : location.pathname === '/beneficios'
-                              ? 'SEUS PROGRAMAS DISPONÍVEIS'
-                              : 'Visão Geral do Colaborador'}
+                        : location.pathname === '/receita'
+                          ? 'GESTÃO DE RECEITAS'
+                          : location.pathname.startsWith('/admin/')
+                            ? 'PAINEL ADMINISTRATIVO'
+                            : location.pathname === '/configuracoes'
+                              ? 'MINHA CONTA'
+                              : location.pathname === '/beneficios'
+                                ? 'SEUS PROGRAMAS DISPONÍVEIS'
+                                : 'Visão Geral do Colaborador'}
                 </Typography>
                 {(location.pathname === '/trilha' || location.pathname.startsWith('/curso/')) && (
                   <>

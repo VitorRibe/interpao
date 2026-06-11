@@ -144,3 +144,64 @@ export interface EscalaResponse {
 export interface UpsertEscalaRequest {
   itens: EscalaItem[];
 }
+
+// ─── Recipes (receitas) ────────────────────────────────────────────────────────
+
+export interface Ingrediente {
+  id_ingr: string;
+  nome: string;
+  unidade_med: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IngredienteCreate {
+  nome: string;
+  unidade_med: string;
+}
+
+export interface IngredienteUpdate {
+  nome?: string;
+  unidade_med?: string;
+}
+
+export interface ItemReceita {
+  id_ingr: string;
+  nome: string;
+  unidade_med: string;
+  qtd: number;
+}
+
+export interface ItemReceitaCreate {
+  id_ingr: string;
+  qtd: number;
+}
+
+export interface ReceitaSummary {
+  id_receita: string;
+  titulo: string;
+  descricao: string | null;
+  inst_preparo: string | null;
+  image_url: string | null;
+  tempo_preparo: number | null;
+  porcoes: number | null;
+  created_at: string;
+  updated_at: string;
+  item_count: number;
+  setores: Setor[];
+}
+
+export interface Receita extends ReceitaSummary {
+  itens: ItemReceita[];
+}
+
+export interface ReceitaCreate {
+  titulo: string;
+  descricao?: string | null;
+  inst_preparo?: string | null;
+  image_url?: string | null;
+  tempo_preparo?: number | null;
+  porcoes?: number | null;
+}
+
+export type ReceitaUpdate = Partial<ReceitaCreate>;
