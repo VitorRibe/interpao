@@ -227,7 +227,9 @@ const Layout: React.FC = () => {
                       ? 'Gestão de Usuários'
                       : location.pathname.startsWith('/admin/')
                         ? 'Gestão de Conteúdo'
-                        : 'Dashboard Interativo'}
+                        : location.pathname === '/configuracoes'
+                          ? 'Configurações'
+                          : 'Dashboard Interativo'}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 0.5 }}>
                 <Typography
@@ -245,7 +247,9 @@ const Layout: React.FC = () => {
                       ? 'EDUCAÇÃO TÉCNICA'
                       : location.pathname.startsWith('/admin/')
                         ? 'PAINEL ADMINISTRATIVO'
-                        : 'Visão Geral do Colaborador'}
+                        : location.pathname === '/configuracoes'
+                          ? 'MINHA CONTA'
+                          : 'Visão Geral do Colaborador'}
                 </Typography>
                 {(location.pathname === '/trilha' || location.pathname.startsWith('/curso/')) && (
                   <>

@@ -112,3 +112,11 @@ class AdminListUsersResponse(BaseModel):
     page: int
     size: int
     users: list["AdminCreateUserResponse"]
+
+# ==========================================
+# Self-service password change
+# ==========================================
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str

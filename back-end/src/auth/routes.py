@@ -3,14 +3,15 @@ from fastapi import APIRouter, Depends, Response, Cookie, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_async_db
 from src.auth.schemas import (
-    LoginRequest, 
-    TokenResponse, 
+    LoginRequest,
+    TokenResponse,
     LoggedUserDTO,
     UserRegisterRequest,
     UserRegisterResponse,
     PasswordResetRequest,
     PasswordResetConfirm,
     PasswordResetResponse,
+    ChangePasswordRequest,
 )
 from src.auth.repositories.auth_repository import AuthRepository
 from src.auth.services.service import AuthService
@@ -163,3 +164,22 @@ async def password_reset_confirm(
     user = await use_case.execute_confirm(request.token, request.new_password)
 
     return {"message": "Password reset successfully."}
+
+# ==========================================
+# Self-service Password Change
+# ==========================================
+
+@router.put("/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: LoggedUserDTO = Depends(ValidateUserAccess),
+    db: AsyncSession = Depends(get_async_db),
+):
+    """Change own password (requires current password)."""
+    from src.auth.use_cases.change_password import ChangePasswordUseCase
+
+    auth_repository = AuthRepository(db)
+    auth_service = AuthService(auth_repository)
+    use_case = ChangePasswordUseCase(auth_repository, auth_service)
+
+    return await use_case.execute(current_user.id, request.current_password, request.new_password)
