@@ -223,13 +223,15 @@ const Layout: React.FC = () => {
                   ? 'Trilha do Conhecimento'
                   : location.pathname.startsWith('/curso/')
                     ? 'Mestria em Fermentação Natural'
-                    : location.pathname === '/admin/usuarios'
-                      ? 'Gestão de Usuários'
-                      : location.pathname.startsWith('/admin/')
-                        ? 'Gestão de Conteúdo'
-                        : location.pathname === '/configuracoes'
-                          ? 'Configurações'
-                          : 'Dashboard Interativo'}
+                    : location.pathname === '/escala'
+                      ? 'Escala de Trabalho'
+                      : location.pathname === '/admin/usuarios'
+                        ? 'Gestão de Usuários'
+                        : location.pathname.startsWith('/admin/')
+                          ? 'Gestão de Conteúdo'
+                          : location.pathname === '/configuracoes'
+                            ? 'Configurações'
+                            : 'Dashboard Interativo'}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 0.5 }}>
                 <Typography
@@ -245,11 +247,13 @@ const Layout: React.FC = () => {
                     ? 'PORTAL DE DESCOBERTA'
                     : location.pathname.startsWith('/curso/')
                       ? 'EDUCAÇÃO TÉCNICA'
-                      : location.pathname.startsWith('/admin/')
-                        ? 'PAINEL ADMINISTRATIVO'
-                        : location.pathname === '/configuracoes'
-                          ? 'MINHA CONTA'
-                          : 'Visão Geral do Colaborador'}
+                      : location.pathname === '/escala'
+                        ? 'ITINERÁRIO DETALHADO'
+                        : location.pathname.startsWith('/admin/')
+                          ? 'PAINEL ADMINISTRATIVO'
+                          : location.pathname === '/configuracoes'
+                            ? 'MINHA CONTA'
+                            : 'Visão Geral do Colaborador'}
                 </Typography>
                 {(location.pathname === '/trilha' || location.pathname.startsWith('/curso/')) && (
                   <>

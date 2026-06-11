@@ -27,6 +27,7 @@ import { useUsers, useDeactivateUser, useResetPassword } from '../hooks/useUsers
 import type { AdminUser } from '../types';
 import UserFormDialog from '../components/admin/UserFormDialog';
 import ConfirmDialog from '../components/admin/ConfirmDialog';
+import EscalaFormDialog from '../components/admin/EscalaFormDialog';
 
 const Icon: React.FC<{ name: string; size?: number }> = ({ name, size = 20 }) => (
   <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
@@ -53,6 +54,7 @@ const AdminUsersPage: React.FC = () => {
   const [userToDeactivate, setUserToDeactivate] = useState<AdminUser | null>(null);
   const [tempPassword, setTempPassword] = useState<{ name: string; password: string } | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [escalaUser, setEscalaUser] = useState<AdminUser | null>(null);
 
   const handleResetPassword = async (user: AdminUser) => {
     setResetError(null);
@@ -237,6 +239,16 @@ const AdminUsersPage: React.FC = () => {
                             </IconButton>
                           </Tooltip>
 
+                          <Tooltip title="Editar escala">
+                            <IconButton
+                              size="small"
+                              onClick={() => setEscalaUser(user)}
+                              sx={{ color: 'primary.main' }}
+                            >
+                              <Icon name="calendar_month" size={18} />
+                            </IconButton>
+                          </Tooltip>
+
                           <Tooltip title="Redefinir senha">
                             <IconButton
                               size="small"
@@ -363,6 +375,16 @@ const AdminUsersPage: React.FC = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Escala edit dialog */}
+      {escalaUser && (
+        <EscalaFormDialog
+          open={Boolean(escalaUser)}
+          userId={escalaUser.id}
+          userName={escalaUser.name}
+          onClose={() => setEscalaUser(null)}
+        />
+      )}
     </Box>
   );
 };

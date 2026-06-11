@@ -123,3 +123,24 @@ export interface AdminListUsersResponse {
   size: number;
   users: AdminUser[];
 }
+
+// ─── Escala (work schedule) ────────────────────────────────────────────────────
+
+export interface EscalaItem {
+  dia_semana: number;   // 0=Segunda … 6=Domingo
+  folga: boolean;
+  entrada: string | null;     // "HH:MM"
+  saida: string | null;       // "HH:MM"
+  intervalo_min: number;
+  turno: string | null;
+  notas: string | null;
+}
+
+export interface EscalaResponse {
+  user_id: string;
+  itens: EscalaItem[];
+}
+
+export interface UpsertEscalaRequest {
+  itens: EscalaItem[];
+}

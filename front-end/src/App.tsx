@@ -7,6 +7,7 @@ import CourseContentPage from './pages/CourseContentPage';
 import AdminContentPage from './pages/AdminContentPage';
 import AdminUsersPage from './pages/AdminUsersPage';
 import SettingsPage from './pages/SettingsPage';
+import EscalaPage from './pages/EscalaPage';
 import Layout from './components/Layout';
 import RequireAdmin from './components/RequireAdmin';
 
@@ -41,7 +42,7 @@ function App() {
         <Route path="/configuracoes" element={<SettingsPage />} />
         {/* Placeholder for other routes */}
         <Route path="/receita" element={<div>Receita Content</div>} />
-        <Route path="/escala" element={<div>Escala Content</div>} />
+        <Route path="/escala" element={<EscalaPage />} />
         <Route path="/beneficios" element={<div>Benefícios Content</div>} />
       </Route>
     </Routes>
