@@ -1,0 +1,108 @@
+name: interpao-supabase
+
+services:
+  db:
+    container_name: interpao-supabase-db
+    image: supabase/postgres:15.1.1.78
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - log_min_messages=fatal
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: 5432
+      POSTGRES_PORT: 5432
+      PGPASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      JWT_SECRET: ${SECRET_KEY:-secret-key-change-me}
+      JWT_EXP: 3600
+    networks:
+      - interpao-network
+    volumes:
+      - supabase_db_data:/var/lib/postgresql/data
+
+  rest:
+    container_name: interpao-supabase-rest
+    image: postgrest/postgrest:v12.2.0
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD:-postgres}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,storage,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${SECRET_KEY:-secret-key-change-me}
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    networks:
+      - interpao-network
+
+  auth:
+    container_name: interpao-supabase-auth
+    image: supabase/gotrue:v2.158.1
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD:-postgres}@db:5432/postgres
+      GOTRUE_JWT_SECRET: ${SECRET_KEY:-secret-key-change-me}
+      GOTRUE_SITE_URL: http://localhost:3000
+    networks:
+      - interpao-network
+
+  meta:
+    container_name: interpao-supabase-meta
+    image: supabase/postgres-meta:v0.83.2
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: postgres
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    networks:
+      - interpao-network
+
+  studio:
+    container_name: interpao-supabase-studio
+    image: supabase/studio:20240729-ce42139
+    restart: unless-stopped
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-your-anon-key}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-your-service-key}
+      AUTH_JWT_SECRET: ${SECRET_KEY:-secret-key-change-me}
+    ports:
+      - "8080:3000"
+    networks:
+      - interpao-network
+
+networks:
+  interpao-network:
+    external: true
+    name: interpao-network
+
+volumes:
+  supabase_db_data:
