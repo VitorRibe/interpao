@@ -47,7 +47,10 @@ const Layout: React.FC = () => {
     { label: 'Escala', icon: 'straighten', path: '/escala' },
     { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
     ...(user?.is_admin
-      ? [{ label: 'Gestão de Conteúdo', icon: 'edit_note', path: '/admin/conteudo' }]
+      ? [
+          { label: 'Gestão de Conteúdo', icon: 'edit_note', path: '/admin/conteudo' },
+          { label: 'Gestão de Usuários', icon: 'manage_accounts', path: '/admin/usuarios' },
+        ]
       : []),
   ];
 
@@ -220,9 +223,11 @@ const Layout: React.FC = () => {
                   ? 'Trilha do Conhecimento'
                   : location.pathname.startsWith('/curso/')
                     ? 'Mestria em Fermentação Natural'
-                    : location.pathname.startsWith('/admin/')
-                      ? 'Gestão de Conteúdo'
-                      : 'Dashboard Interativo'}
+                    : location.pathname === '/admin/usuarios'
+                      ? 'Gestão de Usuários'
+                      : location.pathname.startsWith('/admin/')
+                        ? 'Gestão de Conteúdo'
+                        : 'Dashboard Interativo'}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 0.5 }}>
                 <Typography

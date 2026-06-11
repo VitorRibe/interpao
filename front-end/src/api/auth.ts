@@ -10,10 +10,9 @@ export interface TokenResponse {
   token_type: string;
 }
 
-export interface Company {
-  id: string;
-  name: string;
-  image_url: string | null;
+export interface LoggedUserSetor {
+  id_setor: string;
+  nome: string;
 }
 
 export interface User {
@@ -22,9 +21,10 @@ export interface User {
   name: string;
   phone: string | null;
   image_url: string | null;
+  cargo: string | null;
   is_admin: boolean;
   is_superuser: boolean;
-  company: Company;
+  setor: LoggedUserSetor;
 }
 
 

@@ -86,3 +86,40 @@ export interface MultimidiaCreate {
   url?: string | null;
   tipo?: string | null;
 }
+
+// ─── Admin user management ─────────────────────────────────────────────────────
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  name: string;
+  phone: string | null;
+  cargo: string | null;
+  setor: Setor;
+  is_active: boolean;
+}
+
+export interface AdminCreateUserRequest {
+  email: string;
+  password: string;
+  name: string;
+  phone?: string | null;
+  cargo?: string | null;
+  id_setor: string;
+}
+
+export interface AdminUpdateUserRequest {
+  email?: string;
+  name?: string;
+  phone?: string | null;
+  cargo?: string | null;
+  id_setor?: string;
+  is_active?: boolean;
+}
+
+export interface AdminListUsersResponse {
+  total: number;
+  page: number;
+  size: number;
+  users: AdminUser[];
+}
