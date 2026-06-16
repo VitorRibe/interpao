@@ -308,7 +308,6 @@ const StartLearningCard: React.FC<{ onClick: () => void; hasAnyTrilha: boolean }
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 const DashboardPage: React.FC = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const { data: trilhasData, isLoading: trilhasLoading } = useTrilhas();
@@ -384,7 +383,7 @@ const DashboardPage: React.FC = () => {
         <Skeleton variant="rounded" height={100} sx={{ borderRadius: '16px', mb: 4 }} />
         <Grid container spacing={2}>
           {[...Array(4)].map((_, i) => (
-            <Grid item xs={12} sm={6} md={4} key={i}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={i}>
               <Skeleton variant="rounded" height={160} sx={{ borderRadius: '16px' }} />
             </Grid>
           ))}
@@ -505,7 +504,7 @@ const DashboardPage: React.FC = () => {
 
         <Grid container spacing={2}>
           {allFeatures.map((feature) => (
-            <Grid item xs={12} sm={6} md={4} key={feature.path}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={feature.path}>
               <FeatureCard
                 {...feature}
                 onClick={() => navigate(feature.path)}

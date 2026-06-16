@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
+import type { ReactNode } from 'react';
 import { useTransition, animated } from '@react-spring/web';
 import { Box } from '@mui/material';
 

@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 
 /**
  * A hook that ensures a loading state lasts for at least a minimum duration.
- * 
- * @param isLoading The actual loading state from a query or other source.
+ * * @param isLoading The actual loading state from a query or other source.
  * @param minimumTime The minimum duration in milliseconds (default: 200ms).
  * @returns A boolean indicating if the skeleton should still be shown.
  */
@@ -11,7 +10,7 @@ export function useMinimumLoadingTime(isLoading: boolean, minimumTime: number = 
   const [displayLoading, setDisplayLoading] = useState(isLoading);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
       // If it started loading, we immediately show the skeleton
