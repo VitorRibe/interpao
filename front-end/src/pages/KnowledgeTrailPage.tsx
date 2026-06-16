@@ -16,6 +16,7 @@ import { useTrilhas } from '../hooks/useContent';
 import type { TrilhaSummary } from '../types';
 import KnowledgeTrailSkeleton from '../components/skeletons/KnowledgeTrailSkeleton';
 import SkeletonTransition from '../components/skeletons/SkeletonTransition';
+import { useCurrentUser } from '../hooks/useCurrentUser';
 
 // Fallback cover used while trilhas don't carry their own image field.
 const DEFAULT_COVER =
@@ -49,7 +50,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
     <Card
       onClick={!isLocked ? onClick : undefined}
       sx={{
-        // The card fills the grid cell entirely – no width tricks needed
         display: 'flex',
         flexDirection: 'column',
         borderRadius: '16px',
@@ -129,7 +129,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           display: 'flex',
           flexDirection: 'column',
           boxSizing: 'border-box',
-          '&:last-child': { pb: '20px' }, // neutralise MUI's own override
+          '&:last-child': { pb: '20px' },
         }}
       >
         {/* Title row – 1 line, clipped */}
@@ -222,23 +222,59 @@ const KnowledgeTrailPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState(ALL_FILTER);
 
+  const { data: currentUser } = useCurrentUser();
   const { data: trilhas, isLoading, isError } = useTrilhas();
   const showSkeleton = useMinimumLoadingTime(isLoading, 200);
 
-  // Filters are derived from the setores that actually exist in the data.
+  // 1. Filtro base da regra de negócio corrigido (Admin vê tudo)
+  const baseTrilhas = useMemo(() => {
+    if (!trilhas) return [];
+
+    const userSetorNome = currentUser?.setor?.nome?.toLowerCase();
+    
+    // Bypass: Se o usuário logado for do setor administrativo, ou tiver a flag de admin, ele vê tudo.
+    const isUserAdmin = userSetorNome === 'administrativo' || currentUser?.is_admin === true;
+
+    if (isUserAdmin) {
+      return trilhas;
+    }
+
+    return trilhas.filter((t) => {
+      const trilhaSetorNome = t.setor?.nome?.toLowerCase() ?? 'geral';
+
+      // Ignora Administrativo e Escritório para usuários comuns
+      if (trilhaSetorNome === 'administrativo' || trilhaSetorNome === 'escritorio') {
+        return false;
+      }
+
+      // Mostra setor Geral sempre
+      if (trilhaSetorNome === 'geral') {
+        return true;
+      }
+
+      // Mostra se a trilha for do mesmo setor do usuário
+      if (userSetorNome && trilhaSetorNome === userSetorNome) {
+        return true;
+      }
+
+      return false;
+    });
+  }, [trilhas, currentUser]);
+
+  // 2. Filtros de UI baseados apenas nas trilhas permitidas
   const filters = useMemo(() => {
     const categories = new Set<string>();
-    (trilhas ?? []).forEach((t) => categories.add(trilhaCategory(t)));
+    baseTrilhas.forEach((t) => categories.add(trilhaCategory(t)));
     return [ALL_FILTER, ...Array.from(categories).sort()];
-  }, [trilhas]);
+  }, [baseTrilhas]);
 
+  // 3. Trilhas que serão renderizadas na tela (aplica botão de categoria se houver)
   const filteredTrilhas = useMemo(() => {
-    const list = trilhas ?? [];
-    if (activeFilter === ALL_FILTER) return list;
-    return list.filter((t) => trilhaCategory(t) === activeFilter);
-  }, [trilhas, activeFilter]);
+    if (activeFilter === ALL_FILTER) return baseTrilhas;
+    return baseTrilhas.filter((t) => trilhaCategory(t) === activeFilter);
+  }, [baseTrilhas, activeFilter]);
 
-  const totalTrilhas = trilhas?.length ?? 0;
+  const totalTrilhas = baseTrilhas.length;
   const completedTrilhas = 0; // Progress tracking lands with the user_trilha endpoints.
   const progressPct = totalTrilhas ? Math.round((completedTrilhas / totalTrilhas) * 100) : 0;
 

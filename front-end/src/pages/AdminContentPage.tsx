@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Accordion,
   AccordionDetails,
@@ -12,8 +12,8 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
-import { useTrilhas, useDeleteTrilha } from '../hooks/useContent';
-import type { Setor, TrilhaSummary } from '../types';
+import { useTrilhas, useDeleteTrilha, useSetores } from '../hooks/useContent';
+import type { TrilhaSummary } from '../types';
 import TrilhaFormDialog from '../components/admin/TrilhaFormDialog';
 import ConfirmDialog from '../components/admin/ConfirmDialog';
 import ModuloManager from '../components/admin/ModuloManager';
@@ -24,21 +24,14 @@ const Icon: React.FC<{ name: string; size?: number }> = ({ name, size = 20 }) =>
 
 const AdminContentPage: React.FC = () => {
   const { data: trilhas, isLoading, isError } = useTrilhas();
+  const { data: setoresData } = useSetores();
   const deleteTrilha = useDeleteTrilha();
+
+  const setores = setoresData ?? [];
 
   const [trilhaForm, setTrilhaForm] = useState<{ open: boolean; trilha: TrilhaSummary | null }>({ open: false, trilha: null });
   const [trilhaToDelete, setTrilhaToDelete] = useState<TrilhaSummary | null>(null);
   const [expanded, setExpanded] = useState<string | false>(false);
-
-  // No "list setores" endpoint exists yet, so options come from setores
-  // already attached to existing trilhas.
-  const setores = useMemo<Setor[]>(() => {
-    const map = new Map<string, Setor>();
-    (trilhas ?? []).forEach((t) => {
-      if (t.setor) map.set(t.setor.id_setor, t.setor);
-    });
-    return Array.from(map.values()).sort((a, b) => a.nome.localeCompare(b.nome));
-  }, [trilhas]);
 
   return (
     <Box sx={{ maxWidth: 960, mx: 'auto' }}>

@@ -6,10 +6,12 @@ import type {
   MultimidiaCreate,
   TrilhaCreate,
   TrilhaUpdate,
+  Setor,
 } from '../types';
 
 const trilhasKey = ['content', 'trilhas'] as const;
 const trilhaKey = (id: string) => ['content', 'trilha', id] as const;
+const setoresKey = ['content', 'setores'] as const;
 
 // ─── Queries ───────────────────────────────────────────────────────────────────
 
@@ -26,6 +28,13 @@ export const useTrilha = (id: string | undefined) =>
     queryFn: () => contentApi.getTrilha(id as string),
     enabled: Boolean(id),
     staleTime: 1000 * 60 * 5,
+  });
+
+export const useSetores = () =>
+  useQuery<Setor[]>({
+    queryKey: setoresKey,
+    queryFn: contentApi.listSetores,
+    staleTime: 1000 * 60 * 60, // Setores raramente mudam, cache de 1 hora
   });
 
 // ─── Trilha mutations (admin) ───────────────────────────────────────────────────

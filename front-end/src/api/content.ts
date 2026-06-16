@@ -9,9 +9,17 @@ import type {
   TrilhaCreate,
   TrilhaSummary,
   TrilhaUpdate,
+  Setor, // <-- Tipagem adicionada aqui
 } from '../types';
 
 export const contentApi = {
+  // ── Setores ──
+  listSetores: async (): Promise<Setor[]> => {
+    // Atenção: Verifique se a rota na sua API Python é '/setores' ou '/content/setores'
+    const response = await apiClient.get<Setor[]>('/content/setores');
+    return response.data;
+  },
+
   // ── Trilhas ──
   listTrilhas: async (): Promise<TrilhaSummary[]> => {
     const response = await apiClient.get<TrilhaSummary[]>('/content/trilhas');
