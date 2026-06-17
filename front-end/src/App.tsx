@@ -12,6 +12,7 @@ import ReceitasPage from './pages/ReceitasPage';
 import BenefitsPage from './pages/BenefitsPage';
 import Layout from './components/Layout';
 import RequireAdmin from './components/RequireAdmin';
+import DocumentosPage from './pages/DocumentsPage';
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
         <Route path="/receita" element={<ReceitasPage />} />
         <Route path="/escala" element={<EscalaPage />} />
         <Route path="/beneficios" element={<BenefitsPage />} />
+        <Route path="/documentos" element={<DocumentosPage />} />
       </Route>
     </Routes>
   );

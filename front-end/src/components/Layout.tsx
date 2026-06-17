@@ -39,13 +39,13 @@ const Layout: React.FC = () => {
     return name.slice(0, 2).toUpperCase();
   };
 
-
   const navItems = [
     { label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
     { label: 'Trilha do Conhecimento', icon: 'route', path: '/trilha' },
     { label: 'Receita', icon: 'menu_book', path: '/receita' },
     { label: 'Escala', icon: 'straighten', path: '/escala' },
     { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
+    { label: 'Documentos', icon: 'folder_open', path: '/documentos' }, // Nova aba adicionada
     ...(user?.is_admin
       ? [
           { label: 'Gestão de Conteúdo', icon: 'edit_note', path: '/admin/conteudo' },
@@ -59,6 +59,7 @@ const Layout: React.FC = () => {
     { label: 'Trilha', icon: 'route', path: '/trilha' },
     { label: 'Receitas', icon: 'menu_book', path: '/receita' },
     { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
+    { label: 'Documentos', icon: 'folder_open', path: '/documentos' }, // Nova aba no mobile
   ];
 
   const sidebarContent = (
@@ -233,15 +234,17 @@ const Layout: React.FC = () => {
                       ? 'Escala de Trabalho'
                       : location.pathname === '/receita'
                         ? 'Receitas'
-                        : location.pathname === '/admin/usuarios'
-                          ? 'Gestão de Usuários'
-                          : location.pathname.startsWith('/admin/')
-                            ? 'Gestão de Conteúdo'
-                            : location.pathname === '/configuracoes'
-                              ? 'Configurações'
-                              : location.pathname === '/beneficios'
-                                ? 'Benefícios'
-                                : 'Dashboard Interativo'}
+                        : location.pathname === '/documentos'
+                          ? 'Documentos Corporativos'
+                          : location.pathname === '/admin/usuarios'
+                            ? 'Gestão de Usuários'
+                            : location.pathname.startsWith('/admin/')
+                              ? 'Gestão de Conteúdo'
+                              : location.pathname === '/configuracoes'
+                                ? 'Configurações'
+                                : location.pathname === '/beneficios'
+                                  ? 'Benefícios'
+                                  : 'Dashboard Interativo'}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 0.5 }}>
                 <Typography
@@ -261,13 +264,15 @@ const Layout: React.FC = () => {
                         ? 'ITINERÁRIO DETALHADO'
                         : location.pathname === '/receita'
                           ? 'GESTÃO DE RECEITAS'
-                          : location.pathname.startsWith('/admin/')
-                            ? 'PAINEL ADMINISTRATIVO'
-                            : location.pathname === '/configuracoes'
-                              ? 'MINHA CONTA'
-                              : location.pathname === '/beneficios'
-                                ? 'SEUS PROGRAMAS DISPONÍVEIS'
-                                : 'Visão Geral do Colaborador'}
+                          : location.pathname === '/documentos'
+                            ? 'DIRETRIZES E MANUAIS'
+                            : location.pathname.startsWith('/admin/')
+                              ? 'PAINEL ADMINISTRATIVO'
+                              : location.pathname === '/configuracoes'
+                                ? 'MINHA CONTA'
+                                : location.pathname === '/beneficios'
+                                  ? 'SEUS PROGRAMAS DISPONÍVEIS'
+                                  : 'Visão Geral do Colaborador'}
                 </Typography>
                 {(location.pathname === '/trilha' || location.pathname.startsWith('/curso/')) && (
                   <>
