@@ -233,14 +233,10 @@ async def list_setores_admin(
 
 @router.get("/progresso", response_model=List[ProgressoFuncionario])
 async def get_progresso_equipe(
-    # ATENÇÃO: Usando ValidateUserAccess em vez de ValidateAdminAccess
-    # para permitir que a Nayara (que pode não ser admin global) veja a tela baseada no setor dela.
     current_user: dict = Depends(ValidateUserAccess), 
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Get team progress (Admin or Administrative/Office Sectors only)."""
-    
-    # 1. Validação de Acesso Customizada
+    """Get detailed team progress per knowledge trail."""
     setor_nome = current_user.setor.nome.lower() if current_user.setor and getattr(current_user.setor, "nome", None) else ""
     is_authorized = (
         current_user.is_admin or 
@@ -250,13 +246,11 @@ async def get_progresso_equipe(
     )
     
     if not is_authorized:
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="Acesso negado. Apenas gestores podem visualizar o progresso da equipe."
         )
 
-    # 2. Executa a regra de negócio (O arquivo do Use Case deve ser criado pelo seu colega)
     use_case = GetProgressoEquipeUseCase(db)
     progresso_data = await use_case.execute()
     

@@ -124,6 +124,13 @@ class ChangePasswordRequest(BaseModel):
 
 
 
+class DetalheTrilha(BaseModel):
+    trilha_id: str
+    titulo: str
+    modulos_concluidos: int
+    total_modulos: int
+    progresso_pct: float
+
 class ProgressoFuncionario(BaseModel):
     user_id: str
     nome: str
@@ -132,6 +139,7 @@ class ProgressoFuncionario(BaseModel):
     trilhas_concluidas: int
     total_trilhas: int
     progresso_pct: float
+    detalhes_trilhas: List[DetalheTrilha]
 
 class AdminProgressoResponse(BaseModel):
     progresso: List[ProgressoFuncionario]
