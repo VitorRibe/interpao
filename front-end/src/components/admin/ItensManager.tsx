@@ -29,7 +29,13 @@ const Icon: React.FC<{ name: string; size?: number }> = ({ name, size = 18 }) =>
   <span className="material-symbols-outlined" style={{ fontSize: size }}>{name}</span>
 );
 
-const ItensManager: React.FC<{ receitaId: string }> = ({ receitaId }) => {
+interface ItensManagerProps {
+  receitaId: string;
+  readOnly?: boolean;
+  isAtendimento?: boolean;
+}
+
+const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false, isAtendimento = false }) => {
   const { data: receita, isLoading } = useReceita(receitaId);
   const { data: allIngredientes } = useIngredientes();
   const { data: allSetores } = useReceitaSetores();
@@ -101,65 +107,24 @@ const ItensManager: React.FC<{ receitaId: string }> = ({ receitaId }) => {
 
   return (
     <Box>
-      {/* ── Instruções de Preparo ── */}
-      {receita?.inst_preparo && (
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(127,86,0,0.04)', borderRadius: 2, border: '1px solid rgba(212,195,190,0.3)' }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1 }}>
-            Instruções de Preparo
-          </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-line' }}>
-            {receita.inst_preparo}
-          </Typography>
-        </Box>
-      )}
-
-      {/* ── Setores vinculados ── */}
-      <Box sx={{ mb: 3 }}>
-        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1 }}>
-          Setores Vinculados
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center', mb: 1 }}>
-          {receitaSetores.map((s) => (
-            <Chip
-              key={s.id_setor}
-              label={s.nome}
-              size="small"
-              onDelete={() => removeSetor.mutate(s.id_setor)}
-              sx={{ fontWeight: 700, bgcolor: 'rgba(127,86,0,0.1)', color: 'secondary.main' }}
-            />
-          ))}
-          {receitaSetores.length === 0 && (
-            <Typography variant="caption" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-              Nenhum setor vinculado.
-            </Typography>
+      {/* ── Ocultar Instruções e Setores para Atendimento ── */}
+      {!isAtendimento && (
+        <>
+          {/* ── Instruções de Preparo ── */}
+          {receita?.inst_preparo && (
+            <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(127,86,0,0.04)', borderRadius: 2, border: '1px solid rgba(212,195,190,0.3)' }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1 }}>
+                Instruções de Preparo
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-line' }}>
+                {receita.inst_preparo}
+              </Typography>
+            </Box>
           )}
-        </Box>
-        {availableSetores.length > 0 && (
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-            <TextField
-              select
-              size="small"
-              label="Adicionar setor"
-              value={setorToAdd}
-              onChange={(e) => setSetorToAdd(e.target.value)}
-              sx={{ minWidth: 200 }}
-            >
-              {availableSetores.map((s) => (
-                <MenuItem key={s.id_setor} value={s.id_setor}>{s.nome}</MenuItem>
-              ))}
-            </TextField>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={handleAddSetor}
-              disabled={!setorToAdd || addSetor.isPending}
-              sx={{ textTransform: 'none', fontWeight: 700, borderColor: 'secondary.main', color: 'secondary.main' }}
-            >
-              Vincular
-            </Button>
-          </Box>
-        )}
-      </Box>
+
+          
+        </>
+      )}
 
       {/* ── Ingredientes ── */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
@@ -168,43 +133,45 @@ const ItensManager: React.FC<{ receitaId: string }> = ({ receitaId }) => {
         </Typography>
       </Box>
 
-      {/* Add item form */}
-      <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 2, borderStyle: 'dashed' }}>
-        <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <Autocomplete
-            size="small"
-            options={availableIngredientes}
-            getOptionLabel={(opt) => `${opt.nome} (${opt.unidade_med})`}
-            value={selectedIngr}
-            onChange={(_e, val) => setSelectedIngr(val)}
-            renderInput={(params) => <TextField {...params} label="Ingrediente" />}
-            sx={{ flex: 2, minWidth: 200 }}
-            noOptionsText="Nenhum ingrediente disponível"
-          />
-          <TextField
-            size="small"
-            label="Quantidade"
-            value={qtd}
-            onChange={(e) => setQtd(e.target.value.replace(/[^0-9.,]/g, ''))}
-            sx={{ flex: 1, minWidth: 100 }}
-          />
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Icon name="add" size={16} />}
-            onClick={handleAddItem}
-            disabled={!selectedIngr || !qtd || addItem.isPending}
-            sx={{ textTransform: 'none', fontWeight: 700, bgcolor: 'secondary.main', mt: '1px', height: 40 }}
-          >
-            Adicionar
-          </Button>
-        </Box>
-        {addError && (
-          <Typography variant="caption" sx={{ color: 'error.main', mt: 1, display: 'block' }}>
-            {addError}
-          </Typography>
-        )}
-      </Paper>
+      {/* Add item form - Oculta se for readOnly */}
+      {!readOnly && (
+        <Paper variant="outlined" sx={{ p: 2, mb: 2, borderRadius: 2, borderStyle: 'dashed' }}>
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <Autocomplete
+              size="small"
+              options={availableIngredientes}
+              getOptionLabel={(opt) => `${opt.nome} (${opt.unidade_med})`}
+              value={selectedIngr}
+              onChange={(_e, val) => setSelectedIngr(val)}
+              renderInput={(params) => <TextField {...params} label="Ingrediente" />}
+              sx={{ flex: 2, minWidth: 200 }}
+              noOptionsText="Nenhum ingrediente disponível"
+            />
+            <TextField
+              size="small"
+              label="Quantidade"
+              value={qtd}
+              onChange={(e) => setQtd(e.target.value.replace(/[^0-9.,]/g, ''))}
+              sx={{ flex: 1, minWidth: 100 }}
+            />
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Icon name="add" size={16} />}
+              onClick={handleAddItem}
+              disabled={!selectedIngr || !qtd || addItem.isPending}
+              sx={{ textTransform: 'none', fontWeight: 700, bgcolor: 'secondary.main', mt: '1px', height: 40 }}
+            >
+              Adicionar
+            </Button>
+          </Box>
+          {addError && (
+            <Typography variant="caption" sx={{ color: 'error.main', mt: 1, display: 'block' }}>
+              {addError}
+            </Typography>
+          )}
+        </Paper>
+      )}
 
       {itens.length === 0 && (
         <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic', py: 1 }}>
@@ -223,9 +190,12 @@ const ItensManager: React.FC<{ receitaId: string }> = ({ receitaId }) => {
                   <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main' }} noWrap>
                     {item.nome}
                   </Typography>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                    {editingItem === item.id_ingr ? '' : `${item.qtd} ${item.unidade_med}`}
-                  </Typography>
+                  {/* Oculta quantidade e unidade de medida para o Atendimento */}
+                  {!isAtendimento && (
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      {editingItem === item.id_ingr ? '' : `${item.qtd} ${item.unidade_med}`}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
 
@@ -251,22 +221,25 @@ const ItensManager: React.FC<{ receitaId: string }> = ({ receitaId }) => {
                   </IconButton>
                 </Box>
               ) : (
-                <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
-                  <Tooltip title="Editar quantidade">
-                    <IconButton
-                      size="small"
-                      onClick={() => { setEditingItem(item.id_ingr); setEditQtd(String(item.qtd)); }}
-                      sx={{ color: 'primary.main' }}
-                    >
-                      <Icon name="edit" />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Remover ingrediente">
-                    <IconButton size="small" onClick={() => setItemToDelete(item)} sx={{ color: 'error.main' }}>
-                      <Icon name="delete" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
+                // Oculta botões de edição/exclusão de item se for readOnly
+                !readOnly && (
+                  <Box sx={{ display: 'flex', gap: 0.5, flexShrink: 0 }}>
+                    <Tooltip title="Editar quantidade">
+                      <IconButton
+                        size="small"
+                        onClick={() => { setEditingItem(item.id_ingr); setEditQtd(String(item.qtd)); }}
+                        sx={{ color: 'primary.main' }}
+                      >
+                        <Icon name="edit" />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Remover ingrediente">
+                      <IconButton size="small" onClick={() => setItemToDelete(item)} sx={{ color: 'error.main' }}>
+                        <Icon name="delete" />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                )
               )}
             </Box>
           </Paper>
@@ -274,19 +247,22 @@ const ItensManager: React.FC<{ receitaId: string }> = ({ receitaId }) => {
       </Box>
 
       {/* Delete confirmation */}
-      <ConfirmDialog
-        open={Boolean(itemToDelete)}
-        title="Remover ingrediente"
-        message={`Remover "${itemToDelete?.nome}" desta receita?`}
-        loading={removeItem.isPending}
-        onConfirm={async () => {
-          if (itemToDelete) {
-            await removeItem.mutateAsync(itemToDelete.id_ingr);
-            setItemToDelete(null);
-          }
-        }}
-        onClose={() => setItemToDelete(null)}
-      />
+      {/* Oculta diálogo se for readOnly (apenas por garantia) */}
+      {!readOnly && (
+        <ConfirmDialog
+          open={Boolean(itemToDelete)}
+          title="Remover ingrediente"
+          message={`Remover "${itemToDelete?.nome}" desta receita?`}
+          loading={removeItem.isPending}
+          onConfirm={async () => {
+            if (itemToDelete) {
+              await removeItem.mutateAsync(itemToDelete.id_ingr);
+              setItemToDelete(null);
+            }
+          }}
+          onClose={() => setItemToDelete(null)}
+        />
+      )}
     </Box>
   );
 };

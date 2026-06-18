@@ -205,3 +205,23 @@ export interface ReceitaCreate {
 }
 
 export type ReceitaUpdate = Partial<ReceitaCreate>;
+
+
+
+
+// Documentos
+export interface CategoriaDocumento {
+  id_categoria: string;
+  titulo: string;
+  descricao?: string;
+  documentos: Documento[];
+}
+
+export interface Documento {
+  id_documento: string;
+  nome: string;
+  descricao?: string;
+  tipo_arquivo: 'pdf' | 'doc' | 'link'; // para exibir o ícone correto
+  url: string;
+  data_atualizacao: string;
+}

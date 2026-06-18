@@ -6,10 +6,12 @@ import type {
   MultimidiaCreate,
   TrilhaCreate,
   TrilhaUpdate,
+  Setor,
 } from '../types';
 
 const trilhasKey = ['content', 'trilhas'] as const;
 const trilhaKey = (id: string) => ['content', 'trilha', id] as const;
+const setoresKey = ['content', 'setores'] as const;
 
 // ─── Queries ───────────────────────────────────────────────────────────────────
 
@@ -26,6 +28,13 @@ export const useTrilha = (id: string | undefined) =>
     queryFn: () => contentApi.getTrilha(id as string),
     enabled: Boolean(id),
     staleTime: 1000 * 60 * 5,
+  });
+
+export const useSetores = () =>
+  useQuery<Setor[]>({
+    queryKey: setoresKey,
+    queryFn: contentApi.listSetores,
+    staleTime: 1000 * 60 * 60, // Setores raramente mudam, cache de 1 hora
   });
 
 // ─── Trilha mutations (admin) ───────────────────────────────────────────────────
@@ -109,5 +118,23 @@ export const useDeleteMultimidia = (trilhaId: string) => {
   return useMutation({
     mutationFn: (id: string) => contentApi.deleteMultimidia(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: trilhaKey(trilhaId) }),
+  });
+};
+
+// ─── Progresso mutations (usuário) ──────────────────────────────────────────────
+
+export const useConcluirModulo = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (idModulo: string) => contentApi.concluirModulo(idModulo),
+    onSuccess: () => {
+      // Invalida os caches de conteúdo para atualizar o progresso visual na interface
+      qc.invalidateQueries({ queryKey: trilhasKey });
+      qc.invalidateQueries({ queryKey: ['content'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao salvar progresso do módulo:', error);
+    },
   });
 };
