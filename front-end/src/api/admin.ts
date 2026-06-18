@@ -7,6 +7,16 @@ import type {
   Setor,
 } from '../types';
 
+export interface ProgressoFuncionario {
+  user_id: string;
+  nome: string;
+  setor: string;
+  cargo: string | null;
+  trilhas_concluidas: number;
+  total_trilhas: number;
+  progresso_pct: number;
+}
+
 export const adminApi = {
   listUsers: async (skip = 0, limit = 10): Promise<AdminListUsersResponse> => {
     const res = await apiClient.get<AdminListUsersResponse>('/admin/users', {
@@ -41,5 +51,10 @@ export const adminApi = {
       '/admin/setores',
     );
     return res.data.setores;
+  },
+
+  getProgressoEquipe: async (): Promise<ProgressoFuncionario[]> => {
+    const res = await apiClient.get<ProgressoFuncionario[]>('/admin/progresso');
+    return res.data;
   },
 };

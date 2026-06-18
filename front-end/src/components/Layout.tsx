@@ -16,7 +16,6 @@ import {
   BottomNavigationAction,
   useTheme,
   useMediaQuery,
-  Button,
 } from '@mui/material';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { useLogout } from '../hooks/useLogout';
@@ -39,13 +38,21 @@ const Layout: React.FC = () => {
     return name.slice(0, 2).toUpperCase();
   };
 
+  const setorLower = user?.setor?.nome?.toLowerCase() || '';
+  const canViewAdminPanel = user?.is_admin || setorLower.includes('administrativo') || setorLower.includes('escritório') || setorLower.includes('escritorio');
+
   const navItems = [
     { label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
     { label: 'Trilha do Conhecimento', icon: 'route', path: '/trilha' },
     { label: 'Receita', icon: 'menu_book', path: '/receita' },
     { label: 'Escala', icon: 'straighten', path: '/escala' },
     { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
-    { label: 'Documentos', icon: 'folder_open', path: '/documentos' }, // Nova aba adicionada
+    { label: 'Documentos', icon: 'folder_open', path: '/documentos' },
+    ...(canViewAdminPanel
+      ? [
+          { label: 'Acompanhar Equipe', icon: 'monitoring', path: '/admin/progresso' },
+        ]
+      : []),
     ...(user?.is_admin
       ? [
           { label: 'Gestão de Conteúdo', icon: 'edit_note', path: '/admin/conteudo' },
@@ -59,7 +66,7 @@ const Layout: React.FC = () => {
     { label: 'Trilha', icon: 'route', path: '/trilha' },
     { label: 'Receitas', icon: 'menu_book', path: '/receita' },
     { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
-    { label: 'Documentos', icon: 'folder_open', path: '/documentos' }, // Nova aba no mobile
+    { label: 'Documentos', icon: 'folder_open', path: '/documentos' },
   ];
 
   const sidebarContent = (
@@ -175,7 +182,6 @@ const Layout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
-      {/* Sidebar Desktop */}
       {!isMobile && (
         <Drawer
           variant="permanent"
@@ -195,7 +201,6 @@ const Layout: React.FC = () => {
         </Drawer>
       )}
 
-      {/* Main Content Area */}
       <Box
         component="main"
         sx={{
@@ -236,15 +241,17 @@ const Layout: React.FC = () => {
                         ? 'Receitas'
                         : location.pathname === '/documentos'
                           ? 'Documentos Corporativos'
-                          : location.pathname === '/admin/usuarios'
-                            ? 'Gestão de Usuários'
-                            : location.pathname.startsWith('/admin/')
-                              ? 'Gestão de Conteúdo'
-                              : location.pathname === '/configuracoes'
-                                ? 'Configurações'
-                                : location.pathname === '/beneficios'
-                                  ? 'Benefícios'
-                                  : 'Dashboard Interativo'}
+                          : location.pathname === '/admin/progresso'
+                            ? 'Acompanhamento de Equipe'
+                            : location.pathname === '/admin/usuarios'
+                              ? 'Gestão de Usuários'
+                              : location.pathname.startsWith('/admin/')
+                                ? 'Gestão de Conteúdo'
+                                : location.pathname === '/configuracoes'
+                                  ? 'Configurações'
+                                  : location.pathname === '/beneficios'
+                                    ? 'Benefícios'
+                                    : 'Dashboard Interativo'}
               </Typography>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mt: 0.5 }}>
                 <Typography
@@ -266,13 +273,15 @@ const Layout: React.FC = () => {
                           ? 'GESTÃO DE RECEITAS'
                           : location.pathname === '/documentos'
                             ? 'DIRETRIZES E MANUAIS'
-                            : location.pathname.startsWith('/admin/')
-                              ? 'PAINEL ADMINISTRATIVO'
-                              : location.pathname === '/configuracoes'
-                                ? 'MINHA CONTA'
-                                : location.pathname === '/beneficios'
-                                  ? 'SEUS PROGRAMAS DISPONÍVEIS'
-                                  : 'Visão Geral do Colaborador'}
+                            : location.pathname === '/admin/progresso'
+                              ? 'MÉTRICAS DE APRENDIZADO'
+                              : location.pathname.startsWith('/admin/')
+                                ? 'PAINEL ADMINISTRATIVO'
+                                : location.pathname === '/configuracoes'
+                                  ? 'MINHA CONTA'
+                                  : location.pathname === '/beneficios'
+                                    ? 'SEUS PROGRAMAS DISPONÍVEIS'
+                                    : 'Visão Geral do Colaborador'}
                 </Typography>
                 {(location.pathname === '/trilha' || location.pathname.startsWith('/curso/')) && (
                   <>
@@ -294,27 +303,6 @@ const Layout: React.FC = () => {
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              {location.pathname.startsWith('/curso/') && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  startIcon={<span className="material-symbols-outlined" style={{ fontSize: 18 }}>check_circle</span>}
-                  sx={{
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    fontWeight: 800,
-                    fontSize: '0.75rem',
-                    borderRadius: '10px',
-                    px: 2.5,
-                    textTransform: 'none',
-                    boxShadow: 'none',
-                    display: { xs: 'none', sm: 'flex' },
-                    '&:hover': { bgcolor: 'primary.dark', boxShadow: 'none' },
-                  }}
-                >
-                  Concluir Módulo
-                </Button>
-              )}
               <Avatar
                 sx={{
                   bgcolor: 'primary.light',
@@ -339,7 +327,6 @@ const Layout: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Bottom Navigation Mobile */}
       {isMobile && (
         <BottomNavigation
           value={location.pathname}

@@ -120,3 +120,21 @@ export const useDeleteMultimidia = (trilhaId: string) => {
     onSuccess: () => qc.invalidateQueries({ queryKey: trilhaKey(trilhaId) }),
   });
 };
+
+// ─── Progresso mutations (usuário) ──────────────────────────────────────────────
+
+export const useConcluirModulo = () => {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationFn: (idModulo: string) => contentApi.concluirModulo(idModulo),
+    onSuccess: () => {
+      // Invalida os caches de conteúdo para atualizar o progresso visual na interface
+      qc.invalidateQueries({ queryKey: trilhasKey });
+      qc.invalidateQueries({ queryKey: ['content'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao salvar progresso do módulo:', error);
+    },
+  });
+};

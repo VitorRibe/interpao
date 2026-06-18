@@ -223,3 +223,23 @@ async def list_setores_admin(
             for s in setores
         ]
     }
+
+
+# Adicione no final do arquivo router de admin (o primeiro que você mandou)
+
+@router.get("/progresso") # O prefixo /admin já está no APIRouter
+async def get_progresso_equipe(
+    current_user: dict = Depends(ValidateAdminAccess), 
+    db: AsyncSession = Depends(get_async_db),
+):
+    """Get team progress (Admin/Office only)."""
+    # Seu colega de backend deverá criar um Repository/UseCase para isso:
+    # 1. Buscar total de módulos em db.query(Modulo)
+    # 2. Buscar usuários e fazer JOIN com Setor
+    # 3. Fazer COUNT em user_modulo onde concluido = True
+    # 4. Retornar a lista no formato do schema ProgressoFuncionario
+    
+    # Exemplo de chamada:
+    # use_case = GetProgressoEquipeUseCase(db)
+    # return await use_case.execute()
+    pass

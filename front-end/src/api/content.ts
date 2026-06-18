@@ -60,6 +60,11 @@ export const contentApi = {
     await apiClient.delete(`/content/modulos/${id}`);
   },
 
+  // ── Progresso do Usuário ──
+  concluirModulo: async (idModulo: string): Promise<void> => {
+    await apiClient.post(`/content/modulos/${idModulo}/concluir`);
+  },
+
   // ── Multimídia ──
   createMultimidia: async (
     moduloId: string,

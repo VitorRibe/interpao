@@ -12,10 +12,11 @@ import {
   useMediaQuery,
   createTheme,
   ThemeProvider,
+  //Divider,
 } from '@mui/material';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { useSpring, animated } from '@react-spring/web';
-import { useTrilha } from '../hooks/useContent';
+import { useTrilha, useConcluirModulo } from '../hooks/useContent'; // <-- Hook adicionado aqui
 import { saveLastCourse } from './DashboardPage';
 import type { Modulo, Multimidia } from '../types';
 
@@ -45,26 +46,20 @@ const courseTheme = createTheme({
   },
 });
 
-const DEFAULT_HERO =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuAimTOmjwW-r9XVjb5AVosuHXuUWZigtEnPcZhJAPBIaXhQAjgljOFeKeWk_K3GpfIoGY9qbYD6R364NS2ITY7SN8By3q5HxE7iVutGcFou1071dHPL9lycbGlsBm8YOeF5wnrhJCmdneEoK-37gID0RqVqQCy9K-OY3L1JM4kFicOFA-6Z9fwQppQhU6K19XtEAmuzgdMESzmCVDZ4ZTOpjg0Fj4tgrOncAIxPTbgFdIuEmUkFnYpnNyD7raSkTjN9er_lN1ogJEA';
+const DEFAULT_HERO = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAimTOmjwW-r9XVjb5AVosuHXuUWZigtEnPcZhJAPBIaXhQAjgljOFeKeWk_K3GpfIoGY9qbYD6R364NS2ITY7SN8By3q5HxE7iVutGcFou1071dHPL9lycbGlsBm8YOeF5wnrhJCmdneEoK-37gID0RqVqQCy9K-OY3L1JM4kFicOFA-6Z9fwQppQhU6K19XtEAmuzgdMESzmCVDZ4ZTOpjg0Fj4tgrOncAIxPTbgFdIuEmUkFnYpnNyD7raSkTjN9er_lN1ogJEA';
 
 // ─── Multimídia icon by type ────────────────────────────────────────────────────
 const mediaIcon = (tipo: string | null): string => {
   switch ((tipo ?? '').toLowerCase()) {
     case 'video':
-    case 'vídeo':
-      return 'play_circle';
+    case 'vídeo': return 'play_circle';
     case 'pdf':
-    case 'documento':
-      return 'description';
+    case 'documento': return 'description';
     case 'imagem':
-    case 'image':
-      return 'image';
+    case 'image': return 'image';
     case 'audio':
-    case 'áudio':
-      return 'headphones';
-    default:
-      return 'attachment';
+    case 'áudio': return 'headphones';
+    default: return 'attachment';
   }
 };
 
@@ -163,7 +158,6 @@ function smoothScrollTo(container: HTMLElement, targetY: number, duration = 700,
       onDone?.();
     }
   }
-
   requestAnimationFrame(step);
 }
 
@@ -189,28 +183,14 @@ const NavItem: React.FC<{
     <animated.div
       onClick={onClick}
       style={{
-        ...spring,
-        display: 'flex',
-        alignItems: 'flex-start',
-        gap: 12,
-        padding: '11px 14px',
-        marginBottom: 2,
-        borderRadius: 8,
-        borderLeft: '3px solid',
-        cursor: 'pointer',
-        userSelect: 'none',
+        ...spring, display: 'flex', alignItems: 'flex-start', gap: 12, padding: '11px 14px',
+        marginBottom: 2, borderRadius: 8, borderLeft: '3px solid', cursor: 'pointer', userSelect: 'none',
       }}
     >
       <animated.span
         style={{
-          ...numSpring,
-          fontFamily: '"Playfair Display", serif',
-          fontWeight: 700,
-          color: '#c9883d',
-          fontSize: '0.78rem',
-          minWidth: 20,
-          paddingTop: 2,
-          flexShrink: 0,
+          ...numSpring, fontFamily: '"Playfair Display", serif', fontWeight: 700, color: '#c9883d',
+          fontSize: '0.78rem', minWidth: 20, paddingTop: 2, flexShrink: 0,
         }}
       >
         {number}
@@ -234,6 +214,8 @@ const CourseContentPage: React.FC = () => {
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
 
   const { data: trilha, isLoading, isError } = useTrilha(id);
+  const concluirModuloMutation = useConcluirModulo(); // <-- Iniciando o Hook aqui
+
   const modulos = trilha?.modulos ?? [];
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -241,12 +223,10 @@ const CourseContentPage: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const isAnimating = useRef(false);
 
-  // Default the active chapter to the first módulo once data arrives.
   useEffect(() => {
     if (!activeId && modulos.length > 0) setActiveId(modulos[0].id_modulo);
   }, [modulos, activeId]);
 
-  // Persist last visited course for Dashboard "continue" card.
   useEffect(() => {
     if (!trilha || !id) return;
     saveLastCourse({
@@ -257,7 +237,6 @@ const CourseContentPage: React.FC = () => {
     });
   }, [id, trilha]);
 
-  // ── IntersectionObserver: update active as user scrolls ──
   useEffect(() => {
     const root = scrollRef.current;
     if (!root || modulos.length === 0) return;
@@ -275,7 +254,6 @@ const CourseContentPage: React.FC = () => {
     return () => obs.forEach((o) => o.disconnect());
   }, [modulos]);
 
-  // ── Click nav item → smooth scroll ──
   const scrollToChapter = useCallback((moduloId: string) => {
     const container = scrollRef.current;
     const target = sectionRefs.current[moduloId];
@@ -294,7 +272,6 @@ const CourseContentPage: React.FC = () => {
   const activeIndex = Math.max(0, modulos.findIndex((m) => m.id_modulo === activeId));
   const progressPct = modulos.length ? ((activeIndex + 1) / modulos.length) * 100 : 0;
 
-  // ── Loading / error states (kept inside the course theme for consistency) ──
   if (isLoading) {
     return (
       <ThemeProvider theme={courseTheme}>
@@ -321,32 +298,12 @@ const CourseContentPage: React.FC = () => {
 
   return (
     <ThemeProvider theme={courseTheme}>
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          width: '100%',
-          height: '100vh',
-          overflow: 'hidden',
-          bgcolor: 'background.default',
-          m: '0 !important',
-          p: '0 !important',
-        }}
-      >
+      <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100vh', overflow: 'hidden', bgcolor: 'background.default', m: '0 !important', p: '0 !important' }}>
+        
         {/* ── Hero ── */}
         <Box sx={{ position: 'relative', height: { xs: 220, md: 340 }, flexShrink: 0 }}>
-          <Box
-            component="img"
-            src={DEFAULT_HERO}
-            alt={trilha.titulo}
-            sx={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.62) saturate(0.85)', display: 'block' }}
-          />
-          <Box sx={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(120deg, rgba(44,26,14,0.95) 0%, rgba(44,26,14,0.45) 50%, transparent 100%)',
-            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-            px: { xs: 4, md: 6 }, py: { xs: 4, md: 5 },
-          }}>
+          <Box component="img" src={DEFAULT_HERO} alt={trilha.titulo} sx={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.62) saturate(0.85)', display: 'block' }} />
+          <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(120deg, rgba(44,26,14,0.95) 0%, rgba(44,26,14,0.45) 50%, transparent 100%)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', px: { xs: 4, md: 6 }, py: { xs: 4, md: 5 } }}>
             <Chip label={trilha.setor?.nome ?? 'Trilha de Conhecimento'} size="small" sx={{ bgcolor: 'secondary.main', color: '#fff', width: 'fit-content', mb: 2, fontWeight: 900, fontSize: '0.58rem', letterSpacing: '0.16em' }} />
             <Typography variant="h2" sx={{ color: '#fff', fontSize: { xs: '1.7rem', md: '2.5rem' }, lineHeight: 1.1, mb: 1.5, maxWidth: 520 }}>
               {trilha.titulo}
@@ -364,15 +321,7 @@ const CourseContentPage: React.FC = () => {
           <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.38)', letterSpacing: '0.13em', textTransform: 'uppercase', whiteSpace: 'nowrap', fontSize: '0.57rem' }}>
             Seu Progresso
           </Typography>
-          <LinearProgress
-            variant="determinate"
-            value={progressPct}
-            sx={{
-              flex: 1, height: 3, borderRadius: 99,
-              bgcolor: 'rgba(255,255,255,0.1)',
-              '& .MuiLinearProgress-bar': { bgcolor: 'secondary.main', borderRadius: 99, transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' },
-            }}
-          />
+          <LinearProgress variant="determinate" value={progressPct} sx={{ flex: 1, height: 3, borderRadius: 99, bgcolor: 'rgba(255,255,255,0.1)', '& .MuiLinearProgress-bar': { bgcolor: 'secondary.main', borderRadius: 99, transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' } }} />
           <Typography variant="caption" sx={{ color: 'secondary.light', fontWeight: 600, whiteSpace: 'nowrap', fontSize: '0.72rem' }}>
             {modulos.length ? `${activeIndex + 1} de ${modulos.length} capítulos` : 'Sem capítulos'}
           </Typography>
@@ -380,35 +329,21 @@ const CourseContentPage: React.FC = () => {
 
         {/* ── Body row ── */}
         <Box sx={{ display: 'flex', flex: 1, minHeight: 0 }}>
-
+          
           {/* ── Scrollable content column ── */}
-          <Box
-            ref={scrollRef}
-            sx={{
-              flex: 1,
-              minWidth: 0,
-              overflowY: 'scroll',
-              bgcolor: '#ffffff',
-              borderRight: isLargeScreen ? '1px solid' : 'none',
-              borderColor: 'divider',
-              scrollbarWidth: 'none',
-              msOverflowStyle: 'none',
-              '&::-webkit-scrollbar': { display: 'none' },
-            }}
-          >
+          <Box ref={scrollRef} sx={{ flex: 1, minWidth: 0, overflowY: 'scroll', bgcolor: '#ffffff', borderRight: isLargeScreen ? '1px solid' : 'none', borderColor: 'divider', scrollbarWidth: 'none', msOverflowStyle: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
             <Box sx={{ px: { xs: 4, md: 6, xl: 10 }, py: { xs: 5, md: 7 } }}>
               {modulos.length === 0 && (
                 <Box sx={{ textAlign: 'center', py: 8 }}>
                   <span className="material-symbols-outlined" style={{ fontSize: 44, color: '#c9883d', opacity: 0.5 }}>menu_book</span>
                   <Typography variant="h5" sx={{ color: 'primary.main', mt: 1 }}>Nenhum módulo ainda</Typography>
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    O conteúdo desta trilha está sendo preparado.
-                  </Typography>
+                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>O conteúdo desta trilha está sendo preparado.</Typography>
                 </Box>
               )}
 
               {modulos.map((modulo, index) => {
                 const number = String(modulo.ordem ?? index + 1).padStart(2, '0');
+                
                 return (
                   <Box
                     key={modulo.id_modulo}
@@ -438,8 +373,36 @@ const CourseContentPage: React.FC = () => {
                         </Box>
                       </Box>
                     </Box>
+                    
                     <Box sx={{ pl: { xs: 0, sm: '76px' } }}>
                       <ChapterBody modulo={modulo} />
+                      
+                      {/* ── Botão de Concluir Módulo Movido para cá ── */}
+                      <Box sx={{ mt: 5, pt: 3, borderTop: '1px dashed', borderColor: 'divider', display: 'flex', justifyContent: 'flex-start' }}>
+                        <Button
+                          variant="contained"
+                          onClick={() => concluirModuloMutation.mutate(modulo.id_modulo)}
+                          disabled={concluirModuloMutation.isPending}
+                          startIcon={
+                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                              {concluirModuloMutation.isPending ? 'sync' : 'check_circle'}
+                            </span>
+                          }
+                          sx={{
+                            bgcolor: 'secondary.main',
+                            color: 'white',
+                            fontWeight: 800,
+                            px: 3,
+                            py: 1,
+                            borderRadius: '8px',
+                            textTransform: 'none',
+                            boxShadow: 'none',
+                            '&:hover': { bgcolor: 'secondary.dark', boxShadow: 'none' },
+                          }}
+                        >
+                          {concluirModuloMutation.isPending ? 'Salvando progresso...' : 'Marcar capítulo como lido'}
+                        </Button>
+                      </Box>
                     </Box>
                   </Box>
                 );
@@ -449,21 +412,11 @@ const CourseContentPage: React.FC = () => {
 
           {/* ── Fixed sidebar — no scroll ever ── */}
           {isLargeScreen && (
-            <Box
-              sx={{
-                width: 284,
-                flexShrink: 0,
-                bgcolor: 'background.default',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
+            <Box sx={{ width: 284, flexShrink: 0, bgcolor: 'background.default', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', color: 'text.secondary', opacity: 0.36, display: 'block', mb: 2, pb: 1.5, borderBottom: '1px solid', borderColor: 'divider', flexShrink: 0 }}>
                   Conteúdo do Curso
                 </Typography>
-
                 <Box component="nav" sx={{ flexShrink: 0, overflowY: 'auto' }}>
                   {modulos.map((modulo, index) => (
                     <NavItem
@@ -476,9 +429,7 @@ const CourseContentPage: React.FC = () => {
                     />
                   ))}
                 </Box>
-
                 <Box sx={{ flex: 1 }} />
-
                 <Box sx={{ p: 2.5, borderRadius: 3, border: '2px dashed', borderColor: 'divider', textAlign: 'center', flexShrink: 0 }}>
                   <WorkspacePremiumIcon sx={{ fontSize: 26, color: 'secondary.main', opacity: 0.3, mb: 0.75, display: 'block', mx: 'auto' }} />
                   <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', color: 'primary.main', mb: 0.5, fontSize: '0.64rem' }}>
