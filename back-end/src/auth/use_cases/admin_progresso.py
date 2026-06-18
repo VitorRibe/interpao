@@ -7,22 +7,22 @@ class GetProgressoEquipeUseCase:
         self.db = db
 
     async def execute(self) -> list[ProgressoFuncionario]:
-        # 1. Procura todas as trilhas e calcula o total de módulos de cada uma
+        # 1. Procura todas as trilhas e calcula o total de módulos de cada uma (Corrigido para id_trilha e id_modulo)
         query_trilhas = text("""
-            SELECT t.id AS trilha_id, t.titulo, COUNT(m.id) AS total_modulos
+            SELECT t.id_trilha AS trilha_id, t.titulo, COUNT(m.id_modulo) AS total_modulos
             FROM trilha t
-            LEFT JOIN modulo m ON m.id_trilha = t.id
-            GROUP BY t.id, t.titulo
+            LEFT JOIN modulo m ON m.id_trilha = t.id_trilha
+            GROUP BY t.id_trilha, t.titulo
         """)
         result_trilhas = await self.db.execute(query_trilhas)
         trilhas_dict = {str(row["trilha_id"]): row for row in result_trilhas.mappings().all()}
         total_trilhas_sistema = len(trilhas_dict)
 
-        # 2. Mapeia a quantidade de módulos concluídos por utilizador em cada trilha
+        # 2. Mapeia a quantidade de módulos concluídos por utilizador em cada trilha (Corrigido para id_modulo)
         query_progresso_modulos = text("""
             SELECT um.user_id, m.id_trilha, COUNT(um.id_modulo) AS concluidos
             FROM user_modulo um
-            JOIN modulo m ON um.id_modulo = m.id
+            JOIN modulo m ON um.id_modulo = m.id_modulo
             WHERE um.concluido = true
             GROUP BY um.user_id, m.id_trilha
         """)
@@ -35,7 +35,7 @@ class GetProgressoEquipeUseCase:
                 progresso_map[uid] = {}
             progresso_map[uid][tid] = row["concluidos"]
 
-        # 3. Procura todos os utilizadores ativos mapeados com os seus setores
+        # 3. Procura todos os utilizadores ativos mapeados com os seus setores (Mantido, assumindo que user usa 'id')
         query_users = text("""
             SELECT u.id AS user_id, u.name AS nome, u.cargo, s.nome AS setor
             FROM "user" u
