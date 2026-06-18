@@ -1,4 +1,8 @@
 import uuid
+from typing import List
+from src.auth.dependencies import ValidateUserAccess
+from src.auth.schemas import ProgressoFuncionario
+from src.auth.use_cases.admin_progresso import GetProgressoEquipeUseCase
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_async_db
@@ -227,19 +231,33 @@ async def list_setores_admin(
 
 # Adicione no final do arquivo router de admin (o primeiro que você mandou)
 
-@router.get("/progresso") # O prefixo /admin já está no APIRouter
+@router.get("/progresso", response_model=List[ProgressoFuncionario])
 async def get_progresso_equipe(
-    current_user: dict = Depends(ValidateAdminAccess), 
+    # ATENÇÃO: Usando ValidateUserAccess em vez de ValidateAdminAccess
+    # para permitir que a Nayara (que pode não ser admin global) veja a tela baseada no setor dela.
+    current_user: dict = Depends(ValidateUserAccess), 
     db: AsyncSession = Depends(get_async_db),
 ):
-    """Get team progress (Admin/Office only)."""
-    # Seu colega de backend deverá criar um Repository/UseCase para isso:
-    # 1. Buscar total de módulos em db.query(Modulo)
-    # 2. Buscar usuários e fazer JOIN com Setor
-    # 3. Fazer COUNT em user_modulo onde concluido = True
-    # 4. Retornar a lista no formato do schema ProgressoFuncionario
+    """Get team progress (Admin or Administrative/Office Sectors only)."""
     
-    # Exemplo de chamada:
-    # use_case = GetProgressoEquipeUseCase(db)
-    # return await use_case.execute()
-    pass
+    # 1. Validação de Acesso Customizada
+    setor_nome = current_user.setor.get("nome", "").lower() if current_user.setor else ""
+    is_authorized = (
+        current_user.is_admin or 
+        "administrativo" in setor_nome or 
+        "escritório" in setor_nome or 
+        "escritorio" in setor_nome
+    )
+    
+    if not is_authorized:
+        from fastapi import HTTPException, status
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Acesso negado. Apenas gestores podem visualizar o progresso da equipe."
+        )
+
+    # 2. Executa a regra de negócio (O arquivo do Use Case deve ser criado pelo seu colega)
+    use_case = GetProgressoEquipeUseCase(db)
+    progresso_data = await use_case.execute()
+    
+    return progresso_data

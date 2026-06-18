@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from uuid import UUID
 
 # ==========================================
@@ -120,3 +120,18 @@ class AdminListUsersResponse(BaseModel):
 class ChangePasswordRequest(BaseModel):
     current_password: str
     new_password: str
+
+
+
+
+class ProgressoFuncionario(BaseModel):
+    user_id: str
+    nome: str
+    setor: str
+    cargo: Optional[str] = None
+    trilhas_concluidas: int
+    total_trilhas: int
+    progresso_pct: float
+
+class AdminProgressoResponse(BaseModel):
+    progresso: List[ProgressoFuncionario]
