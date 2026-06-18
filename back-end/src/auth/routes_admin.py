@@ -241,7 +241,7 @@ async def get_progresso_equipe(
     """Get team progress (Admin or Administrative/Office Sectors only)."""
     
     # 1. Validação de Acesso Customizada
-    setor_nome = current_user.setor.get("nome", "").lower() if current_user.setor else ""
+    setor_nome = current_user.setor.nome.lower() if current_user.setor and getattr(current_user.setor, "nome", None) else ""
     is_authorized = (
         current_user.is_admin or 
         "administrativo" in setor_nome or 
