@@ -10,7 +10,10 @@ import {
   Box,
   Typography,
   Divider,
+  CircularProgress,
+  Alert
 } from '@mui/material';
+import { documentosApi } from '../../api/documentos';
 
 interface DocumentoFormDialogProps {
   open: boolean;
@@ -23,6 +26,8 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
   const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
   const [novaCategoria, setNovaCategoria] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isCriandoNovaCategoria = categoriaSelecionada === 'NEW_CATEGORY';
@@ -30,21 +35,27 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
+      setError('');
     }
   };
 
-  const handleSave = () => {
-    const categoriaFinal = isCriandoNovaCategoria ? novaCategoria : categoriaSelecionada;
-    
-    // Aqui simula o envio dos dados
-    console.log('Enviando dados do Documento:', {
-      nome,
-      categoria: categoriaFinal,
-      isNovaCategoria: isCriandoNovaCategoria,
-      file,
-    });
-    
-    handleClose();
+  const handleSave = async () => {
+    setIsUploading(true);
+    setError('');
+
+    try {
+      if (isCriandoNovaCategoria) {
+        await documentosApi.uploadDocumento(file!, nome, undefined, novaCategoria);
+      } else {
+        await documentosApi.uploadDocumento(file!, nome, categoriaSelecionada, undefined);
+      }
+      handleClose();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.detail || 'Erro ao enviar documento. Verifique a conexão com o servidor.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleClose = () => {
@@ -52,22 +63,29 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
     setCategoriaSelecionada('');
     setNovaCategoria('');
     setFile(null);
+    setError('');
+    setIsUploading(false);
     onClose();
   };
 
-  // Verifica se o formulário está válido para liberar o botão Salvar
   const isFormValid = 
     nome.trim() !== '' && 
     file !== null && 
     (isCriandoNovaCategoria ? novaCategoria.trim() !== '' : categoriaSelecionada !== '');
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
+    <Dialog open={open} onClose={isUploading ? undefined : handleClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 800, color: 'primary.main' }}>Novo Documento</DialogTitle>
       
       <DialogContent dividers>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
           
+          {error && (
+            <Alert severity="error" sx={{ mb: 1 }}>
+              {error}
+            </Alert>
+          )}
+
           {/* Seletor de Categoria */}
           <TextField
             select
@@ -77,8 +95,8 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
             label="Categoria"
             value={categoriaSelecionada}
             onChange={(e) => setCategoriaSelecionada(e.target.value)}
+            disabled={isUploading}
           >
-            {/* Opção especial para criar uma nova */}
             <MenuItem value="NEW_CATEGORY" sx={{ fontWeight: 700, color: 'secondary.main' }}>
               <span className="material-symbols-outlined" style={{ fontSize: 18, marginRight: 8 }}>add</span>
               + Nova Categoria...
@@ -86,7 +104,6 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
             
             <Divider sx={{ my: 0.5 }} />
 
-            {/* Listagem das categorias existentes */}
             {categorias.map((cat) => (
               <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
                 {cat.titulo}
@@ -105,6 +122,7 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
               value={novaCategoria}
               onChange={(e) => setNovaCategoria(e.target.value)}
               autoFocus
+              disabled={isUploading}
             />
           )}
 
@@ -117,6 +135,7 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
             placeholder="Ex: Código de Ética 2026"
             value={nome}
             onChange={(e) => setNome(e.target.value)}
+            disabled={isUploading}
           />
 
           {/* Input de Arquivo */}
@@ -133,6 +152,7 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
               color="primary"
               fullWidth
               onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
               sx={{ textTransform: 'none', fontWeight: 700, borderStyle: 'dashed' }}
             >
               {file ? 'Alterar Arquivo' : 'Selecionar PDF/Word'}
@@ -147,16 +167,17 @@ const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose} sx={{ textTransform: 'none', fontWeight: 700, color: 'text.secondary' }}>
+        <Button onClick={handleClose} disabled={isUploading} sx={{ textTransform: 'none', fontWeight: 700, color: 'text.secondary' }}>
           Cancelar
         </Button>
         <Button
           variant="contained"
           onClick={handleSave}
-          disabled={!isFormValid}
+          disabled={!isFormValid || isUploading}
+          startIcon={isUploading ? <CircularProgress size={20} color="inherit" /> : null}
           sx={{ textTransform: 'none', fontWeight: 700 }}
         >
-          Salvar
+          {isUploading ? 'Salvando...' : 'Salvar'}
         </Button>
       </DialogActions>
     </Dialog>
