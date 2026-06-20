@@ -162,7 +162,7 @@ const EscalaFormDialog: React.FC<EscalaFormDialogProps> = ({
                           value={item.entrada ?? ''}
                           onChange={(e) => update(item.dia_semana, { entrada: e.target.value })}
                           sx={{ width: 120 }}
-                          InputLabelProps={{ shrink: true }}
+                          slotProps={{ inputLabel: { shrink: true } }}
                         />
                         <TextField
                           type="time"
@@ -171,7 +171,7 @@ const EscalaFormDialog: React.FC<EscalaFormDialogProps> = ({
                           value={item.saida ?? ''}
                           onChange={(e) => update(item.dia_semana, { saida: e.target.value })}
                           sx={{ width: 120 }}
-                          InputLabelProps={{ shrink: true }}
+                          slotProps={{ inputLabel: { shrink: true } }}
                         />
                         <TextField
                           type="number"
@@ -181,7 +181,7 @@ const EscalaFormDialog: React.FC<EscalaFormDialogProps> = ({
                           onChange={(e) =>
                             update(item.dia_semana, { intervalo_min: Math.max(0, Number(e.target.value)) })
                           }
-                          inputProps={{ min: 0, max: 480 }}
+                          slotProps={{ htmlInput: { min: 0, max: 480 } }}
                           sx={{ width: 130 }}
                         />
                         <TextField

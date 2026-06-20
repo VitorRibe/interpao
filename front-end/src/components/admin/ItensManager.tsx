@@ -3,10 +3,8 @@ import {
   Autocomplete,
   Box,
   Button,
-  Chip,
   CircularProgress,
   IconButton,
-  MenuItem,
   Paper,
   TextField,
   Tooltip,
@@ -43,7 +41,6 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
   const updateItem = useUpdateItemReceita(receitaId);
   const removeItem = useRemoveItemReceita(receitaId);
   const addSetor = useAddSetorReceita(receitaId);
-  const removeSetor = useRemoveSetorReceita(receitaId);
 
   // Add item form state
   const [selectedIngr, setSelectedIngr] = useState<Ingrediente | null>(null);
