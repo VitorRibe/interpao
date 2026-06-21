@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, s
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Optional
 from app.db.session import get_async_db
-from app.auth.dependencies import ValidateUserAccess, ValidateAdminAccess
-from documentos.schemas import CategoriaDocumentoResponse, DocumentoResponse
-from documentos.use_cases.documento_use_cases import DocumentoUseCase
+from src.auth.dependencies import ValidateUserAccess, ValidateAdminAccess
+from src.documentos.schemas import CategoriaDocumentoResponse, DocumentoResponse
+from src.documentos.use_cases.documento_use_cases import DocumentoUseCase
 
 router = APIRouter(prefix="/documentos", tags=["documentos"])
 
