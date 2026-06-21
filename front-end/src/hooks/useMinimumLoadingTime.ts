@@ -11,7 +11,7 @@ export function useMinimumLoadingTime(isLoading: boolean, minimumTime: number = 
   const [displayLoading, setDisplayLoading] = useState(isLoading);
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
       // If it started loading, we immediately show the skeleton
