@@ -12,7 +12,7 @@ class DocumentoUseCase:
         self.db = db
         # Comunicação interna: a API fala direto com o container 'storage' na porta 5000
         self.storage_url = os.getenv("STORAGE_API_URL", "http://storage:5000")
-        # Chave anon para autorização interna
+        # Chave para autorização interna
         self.supabase_key = os.getenv("SUPABASE_KEY", "")
         # URL pública que o front-end vai usar (passando pelo Nginx/Gateway na porta 8001)
         self.public_supabase_url = os.getenv("SUPABASE_PUBLIC_URL", "http://137.184.49.71:8001")
@@ -137,16 +137,31 @@ class DocumentoUseCase:
         )
 
     async def deletar_documento(self, id_documento: str) -> None:
-        query_select = text("SELECT url FROM documento WHERE id_documento = :id_doc")
+        # 1. Busca a URL e a Categoria do documento antes de apagar
+        query_select = text("SELECT url, id_categoria FROM documento WHERE id_documento = :id_doc")
         res = await self.db.execute(query_select, {"id_doc": id_documento})
         doc = res.mappings().first()
         
         if doc:
+            # 2. Deleta do Supabase
             try:
                 await self._delete_from_supabase(doc["url"])
             except Exception as e:
-                print(f"Erro ao deletar arquivo no Supabase local: {e}")
+                print(f"Erro ao deletar arquivo no Supabase interno: {e}")
 
+            # 3. Deleta o documento do banco de dados
             query_delete = text("DELETE FROM documento WHERE id_documento = :id_doc")
             await self.db.execute(query_delete, {"id_doc": id_documento})
             await self.db.commit()
+
+            # 4. Verifica se a categoria ficou vazia. Se sim, apaga a categoria também!
+            id_categoria = doc.get("id_categoria")
+            if id_categoria:
+                query_count = text("SELECT COUNT(*) FROM documento WHERE id_categoria = :id_cat")
+                res_count = await self.db.execute(query_count, {"id_cat": id_categoria})
+                qtd_documentos = res_count.scalar()
+
+                if qtd_documentos == 0:
+                    query_del_cat = text("DELETE FROM categoria_documento WHERE id_categoria = :id_cat")
+                    await self.db.execute(query_del_cat, {"id_cat": id_categoria})
+                    await self.db.commit()
