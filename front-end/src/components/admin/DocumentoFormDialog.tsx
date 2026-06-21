@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -6,159 +6,116 @@ import {
   DialogActions,
   Button,
   TextField,
-  MenuItem,
+  Autocomplete,
   Box,
-  Typography,
-  Divider,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
+import { useDocumentos, useUploadDocumento } from '../../hooks/useDocumentos';
 
 interface DocumentoFormDialogProps {
   open: boolean;
   onClose: () => void;
-  categorias: Array<{ id_categoria: string; titulo: string }>;
 }
 
-const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose, categorias }) => {
-  const [nome, setNome] = useState('');
-  const [categoriaSelecionada, setCategoriaSelecionada] = useState('');
-  const [novaCategoria, setNovaCategoria] = useState('');
+const DocumentoFormDialog: React.FC<DocumentoFormDialogProps> = ({ open, onClose }) => {
+  const { data: categorias } = useDocumentos();
+  const uploadMutation = useUploadDocumento();
+
   const [file, setFile] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [nome, setNome] = useState('');
+  const [categoriaId, setCategoriaId] = useState<string | null>(null);
+  const [novaCategoria, setNovaCategoria] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const isCriandoNovaCategoria = categoriaSelecionada === 'NEW_CATEGORY';
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+    if (!file || !nome) {
+      setError('Arquivo e nome são obrigatórios.');
+      return;
+    }
+    if (!categoriaId && !novaCategoria) {
+      setError('Selecione uma categoria existente ou crie uma nova.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('nome', nome);
+    if (categoriaId) formData.append('id_categoria', categoriaId);
+    if (novaCategoria) formData.append('nova_categoria', novaCategoria);
+
+    try {
+      await uploadMutation.mutateAsync(formData);
+      handleClose();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Erro ao fazer upload do documento.');
     }
   };
 
-  const handleSave = () => {
-    const categoriaFinal = isCriandoNovaCategoria ? novaCategoria : categoriaSelecionada;
-    
-    // Aqui simula o envio dos dados
-    console.log('Enviando dados do Documento:', {
-      nome,
-      categoria: categoriaFinal,
-      isNovaCategoria: isCriandoNovaCategoria,
-      file,
-    });
-    
-    handleClose();
-  };
-
   const handleClose = () => {
-    setNome('');
-    setCategoriaSelecionada('');
-    setNovaCategoria('');
     setFile(null);
+    setNome('');
+    setCategoriaId(null);
+    setNovaCategoria('');
+    setError(null);
     onClose();
   };
 
-  // Verifica se o formulário está válido para liberar o botão Salvar
-  const isFormValid = 
-    nome.trim() !== '' && 
-    file !== null && 
-    (isCriandoNovaCategoria ? novaCategoria.trim() !== '' : categoriaSelecionada !== '');
-
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 800, color: 'primary.main' }}>Novo Documento</DialogTitle>
-      
-      <DialogContent dividers>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
-          
-          {/* Seletor de Categoria */}
-          <TextField
-            select
-            fullWidth
-            size="small"
-            variant="outlined"
-            label="Categoria"
-            value={categoriaSelecionada}
-            onChange={(e) => setCategoriaSelecionada(e.target.value)}
-          >
-            {/* Opção especial para criar uma nova */}
-            <MenuItem value="NEW_CATEGORY" sx={{ fontWeight: 700, color: 'secondary.main' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: 18, marginRight: 8 }}>add</span>
-              + Nova Categoria...
-            </MenuItem>
-            
-            <Divider sx={{ my: 0.5 }} />
-
-            {/* Listagem das categorias existentes */}
-            {categorias.map((cat) => (
-              <MenuItem key={cat.id_categoria} value={cat.id_categoria}>
-                {cat.titulo}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          {/* Campo de texto condicional para Nova Categoria */}
-          {isCriandoNovaCategoria && (
-            <TextField
-              fullWidth
-              size="small"
-              variant="outlined"
-              label="Nome da Nova Categoria"
-              placeholder="Ex: Manuais Técnicos"
-              value={novaCategoria}
-              onChange={(e) => setNovaCategoria(e.target.value)}
-              autoFocus
-            />
-          )}
-
-          {/* Nome do Documento */}
-          <TextField
-            fullWidth
-            size="small"
-            variant="outlined"
-            label="Nome do Documento"
-            placeholder="Ex: Código de Ética 2026"
-            value={nome}
-            onChange={(e) => setNome(e.target.value)}
-          />
-
-          {/* Input de Arquivo */}
-          <Box>
-            <input
-              type="file"
-              accept=".pdf,.doc,.docx"
-              ref={fileInputRef}
-              style={{ display: 'none' }}
-              onChange={handleFileChange}
-            />
-            <Button
-              variant="outlined"
-              color="primary"
-              fullWidth
-              onClick={() => fileInputRef.current?.click()}
-              sx={{ textTransform: 'none', fontWeight: 700, borderStyle: 'dashed' }}
-            >
-              {file ? 'Alterar Arquivo' : 'Selecionar PDF/Word'}
+    <Dialog open={open} onClose={uploadMutation.isPending ? undefined : handleClose} maxWidth="sm" fullWidth>
+      <form onSubmit={handleSubmit}>
+        <DialogTitle sx={{ fontWeight: 800, color: 'primary.main' }}>Novo Documento</DialogTitle>
+        <DialogContent dividers>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+            <Button variant="outlined" component="label" sx={{ textTransform: 'none', height: 56, borderColor: 'divider' }}>
+              {file ? file.name : 'Selecionar Arquivo (PDF, DOC)'}
+              <input type="file" hidden accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
             </Button>
-            {file && (
-              <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary', textAlign: 'center' }}>
-                Arquivo selecionado: <strong>{file.name}</strong>
-              </Typography>
-            )}
+            
+            <TextField
+              label="Nome do Documento"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              fullWidth
+              required
+            />
+            
+            <Autocomplete
+              options={categorias || []}
+              getOptionLabel={(opt) => opt.titulo}
+              onChange={(_, val) => {
+                setCategoriaId(val?.id_categoria || null);
+                if (val) setNovaCategoria('');
+              }}
+              renderInput={(params) => <TextField {...params} label="Categoria Existente" />}
+              disabled={!!novaCategoria}
+            />
+            
+            <TextField
+              label="Ou crie uma Nova Categoria"
+              value={novaCategoria}
+              onChange={(e) => {
+                setNovaCategoria(e.target.value);
+                if (e.target.value) setCategoriaId(null);
+              }}
+              fullWidth
+              disabled={!!categoriaId}
+            />
           </Box>
-        </Box>
-      </DialogContent>
-
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose} sx={{ textTransform: 'none', fontWeight: 700, color: 'text.secondary' }}>
-          Cancelar
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSave}
-          disabled={!isFormValid}
-          sx={{ textTransform: 'none', fontWeight: 700 }}
-        >
-          Salvar
-        </Button>
-      </DialogActions>
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={handleClose} disabled={uploadMutation.isPending} sx={{ textTransform: 'none', color: 'text.secondary' }}>
+            Cancelar
+          </Button>
+          <Button type="submit" variant="contained" disabled={uploadMutation.isPending} sx={{ textTransform: 'none', fontWeight: 700 }}>
+            {uploadMutation.isPending ? <CircularProgress size={24} color="inherit" /> : 'Salvar Documento'}
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 };

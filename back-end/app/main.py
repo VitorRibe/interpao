@@ -5,6 +5,7 @@ from app.api.api_v1.api import api_router
 from app.db.init_db import init_db
 from app.tasks.scheduler import start_scheduler, shutdown_scheduler
 from contextlib import asynccontextmanager
+from src.documentos.routes import router as documentos_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,6 +32,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(documentos_router)
 
 @app.get("/")
 async def root():
