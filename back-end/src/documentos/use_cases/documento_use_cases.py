@@ -13,7 +13,7 @@ class DocumentoUseCase:
         # Comunicação interna: a API fala direto com o container 'storage' na porta 5000
         self.storage_url = os.getenv("STORAGE_API_URL", "http://storage:5000")
         # Chave anon para autorização interna
-        self.supabase_key = os.getenv("SUPABASE_ANON_KEY", "your-anon-key")
+        self.supabase_key = os.getenv("SUPABASE_KEY", "")
         # URL pública que o front-end vai usar (passando pelo Nginx/Gateway na porta 8001)
         self.public_supabase_url = os.getenv("SUPABASE_PUBLIC_URL", "http://137.184.49.71:8001")
         self.bucket_name = "documentos"
