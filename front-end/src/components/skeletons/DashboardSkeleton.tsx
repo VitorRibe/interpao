@@ -29,7 +29,7 @@ const DashboardSkeleton: React.FC = () => {
           boxShadow: '0px 32px 64px -12px rgba(68, 42, 34, 0.04)',
         }}
       >
-        <Stack spacing={3} alignItems="center" sx={{ width: '100%', maxWidth: 400 }}>
+        <Stack spacing={3} sx={{ width: '100%', maxWidth: 400, alignItems: 'center' }}>
           <Box sx={{ width: '100%', textAlign: 'center' }}>
             <Skeleton 
               variant="text" 

@@ -2,7 +2,6 @@ import { Box, Paper, Skeleton } from '@mui/material';
 import { useTrail, animated, useSpring } from '@react-spring/web';
 
 const AnimatedPaper = animated(Paper);
-const AnimatedBox = animated(Box);
 
 const KnowledgeTrailSkeleton: React.FC = () => {
   const headerProps = useSpring({

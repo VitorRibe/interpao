@@ -3,10 +3,8 @@ import {
   Autocomplete,
   Box,
   Button,
-  Chip,
   CircularProgress,
   IconButton,
-  MenuItem,
   Paper,
   TextField,
   Tooltip,
@@ -19,8 +17,6 @@ import {
   useAddItemReceita,
   useUpdateItemReceita,
   useRemoveItemReceita,
-  useAddSetorReceita,
-  useRemoveSetorReceita,
 } from '../../hooks/useRecipes';
 import type { Ingrediente, ItemReceita } from '../../types';
 import ConfirmDialog from './ConfirmDialog';
@@ -38,12 +34,10 @@ interface ItensManagerProps {
 const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false, isAtendimento = false }) => {
   const { data: receita, isLoading } = useReceita(receitaId);
   const { data: allIngredientes } = useIngredientes();
-  const { data: allSetores } = useReceitaSetores();
+  useReceitaSetores();
   const addItem = useAddItemReceita(receitaId);
   const updateItem = useUpdateItemReceita(receitaId);
   const removeItem = useRemoveItemReceita(receitaId);
-  const addSetor = useAddSetorReceita(receitaId);
-  const removeSetor = useRemoveSetorReceita(receitaId);
 
   // Add item form state
   const [selectedIngr, setSelectedIngr] = useState<Ingrediente | null>(null);
@@ -57,8 +51,6 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
   // Delete confirmation
   const [itemToDelete, setItemToDelete] = useState<ItemReceita | null>(null);
 
-  // Setor picker
-  const [setorToAdd, setSetorToAdd] = useState('');
 
   if (isLoading) {
     return (
@@ -69,7 +61,6 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
   }
 
   const itens = receita?.itens ?? [];
-  const receitaSetores = receita?.setores ?? [];
 
   // Filter out already-added ingredientes
   const availableIngredientes = (allIngredientes ?? []).filter(
@@ -77,9 +68,6 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
   );
 
   // Filter out already-added setores
-  const availableSetores = (allSetores ?? []).filter(
-    (s) => !receitaSetores.some((rs) => rs.id_setor === s.id_setor),
-  );
 
   const handleAddItem = async () => {
     if (!selectedIngr || !qtd) return;
@@ -99,11 +87,6 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
     setEditingItem(null);
   };
 
-  const handleAddSetor = async () => {
-    if (!setorToAdd) return;
-    await addSetor.mutateAsync(setorToAdd);
-    setSetorToAdd('');
-  };
 
   return (
     <Box>

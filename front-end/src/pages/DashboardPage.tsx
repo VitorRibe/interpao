@@ -308,7 +308,6 @@ const StartLearningCard: React.FC<{ onClick: () => void; hasAnyTrilha: boolean }
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 const DashboardPage: React.FC = () => {
-  const theme = useTheme();
   const navigate = useNavigate();
   const { data: user, isLoading: userLoading } = useCurrentUser();
   const { data: trilhasData, isLoading: trilhasLoading } = useTrilhas();
