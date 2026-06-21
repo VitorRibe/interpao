@@ -10,15 +10,20 @@ from src.documentos.schemas import CategoriaDocumentoResponse, DocumentoResponse
 class DocumentoUseCase:
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.supabase_url = os.getenv("SUPABASE_URL", "http://localhost:8000")
-        self.supabase_key = os.getenv("SUPABASE_KEY", "")
+        # Comunicação interna: a API fala direto com o container 'storage' na porta 5000
+        self.storage_url = os.getenv("STORAGE_API_URL", "http://storage:5000")
+        # Chave anon para autorização interna
+        self.supabase_key = os.getenv("SUPABASE_ANON_KEY", "your-anon-key")
+        # URL pública que o front-end vai usar (passando pelo Nginx/Gateway na porta 8001)
+        self.public_supabase_url = os.getenv("SUPABASE_PUBLIC_URL", "http://137.184.49.71:8001")
         self.bucket_name = "documentos"
 
     async def _upload_to_supabase(self, file: UploadFile, file_name: str) -> str:
-        url = f"{self.supabase_url}/storage/v1/object/{self.bucket_name}/{file_name}"
+        # A API interna do storage não usa /storage/v1, ela atende direto em /object/
+        url = f"{self.storage_url}/object/{self.bucket_name}/{file_name}"
+        
         headers = {
             "Authorization": f"Bearer {self.supabase_key}",
-            "ApiKey": self.supabase_key,
             "Content-Type": file.content_type or "application/octet-stream"
         }
         
@@ -27,17 +32,19 @@ class DocumentoUseCase:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, headers=headers, content=file_content)
             if response.status_code != 200:
-                raise Exception(f"Erro no storage do Supabase: {response.text}")
+                raise Exception(f"Erro no storage interno: {response.text}")
                 
-        return f"{self.supabase_url}/storage/v1/object/public/{self.bucket_name}/{file_name}"
+        # Retorna a URL formatada para acesso externo público
+        return f"{self.public_supabase_url}/storage/v1/object/public/{self.bucket_name}/{file_name}"
 
     async def _delete_from_supabase(self, file_url: str):
         file_name = file_url.split("/")[-1]
-        url = f"{self.supabase_url}/storage/v1/object/{self.bucket_name}/{file_name}"
+        
+        url = f"{self.storage_url}/object/{self.bucket_name}/{file_name}"
         headers = {
             "Authorization": f"Bearer {self.supabase_key}",
-            "ApiKey": self.supabase_key
         }
+        
         async with httpx.AsyncClient() as client:
             await client.delete(url, headers=headers)
 
