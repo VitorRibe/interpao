@@ -39,11 +39,12 @@ interface ModuleCardProps {
   color: string;
   isLocked: boolean;
   isCert?: boolean;
+  isCompleted?: boolean;
   onClick?: () => void;
 }
 
 const ModuleCard: React.FC<ModuleCardProps> = ({
-  title, description, category, time, image, color, isLocked, isCert, onClick,
+  title, description, category, time, image, color, isLocked, isCert, isCompleted, onClick,
 }) => {
   const theme = useTheme();
   return (
@@ -70,6 +71,24 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
     >
       {/* Thumbnail – always 160 px tall */}
       <Box sx={{ position: 'relative', height: 160, flexShrink: 0, overflow: 'hidden' }}>
+        
+        {/* Badge de Trilha Concluída */}
+        {isCompleted && !isLocked && (
+          <Box
+            sx={{
+              position: 'absolute', top: 12, right: 12, zIndex: 10,
+              bgcolor: '#4caf50', color: 'white',
+              display: 'flex', alignItems: 'center', gap: 0.5,
+              px: 1, py: 0.5, borderRadius: '6px',
+              fontWeight: 800, fontSize: '10px',
+              boxShadow: '0px 2px 4px rgba(0,0,0,0.2)',
+            }}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 14 }}>check_circle</span>
+            CONCLUÍDA
+          </Box>
+        )}
+
         <CardMedia
           component="img"
           image={image}
@@ -195,11 +214,12 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                 endIcon={<span className="material-symbols-outlined" style={{ fontSize: 14 }}>chevron_right</span>}
                 sx={{
                   p: 0, minWidth: 'auto', textTransform: 'none',
-                  color: 'primary.main', fontWeight: 700, fontSize: '0.75rem',
+                  color: isCompleted ? '#4caf50' : 'primary.main', // Feedback leve no botão se concluído
+                  fontWeight: 700, fontSize: '0.75rem',
                   '&:hover': { bgcolor: 'transparent' },
                 }}
               >
-                Ver
+                {isCompleted ? 'Revisar' : 'Ver'}
               </Button>
             </>
           )}
@@ -226,13 +246,13 @@ const KnowledgeTrailPage: React.FC = () => {
   const { data: trilhas, isLoading, isError } = useTrilhas();
   const showSkeleton = useMinimumLoadingTime(isLoading, 200);
 
-  // 1. Filtro base da regra de negócio corrigido (Admin vê tudo)
+  // 1. Filtro base da regra de negócio (Admin vê tudo)
   const baseTrilhas = useMemo(() => {
     if (!trilhas) return [];
 
     const userSetorNome = currentUser?.setor?.nome?.toLowerCase();
     
-    // Bypass: Se o usuário logado for do setor administrativo, ou tiver a flag de admin, ele vê tudo.
+    // Bypass: Se o usuário logado for do setor administrativo ou admin, ele vê tudo.
     const isUserAdmin = userSetorNome === 'administrativo' || currentUser?.is_admin === true;
 
     if (isUserAdmin) {
@@ -268,14 +288,15 @@ const KnowledgeTrailPage: React.FC = () => {
     return [ALL_FILTER, ...Array.from(categories).sort()];
   }, [baseTrilhas]);
 
-  // 3. Trilhas que serão renderizadas na tela (aplica botão de categoria se houver)
+  // 3. Trilhas que serão renderizadas na tela
   const filteredTrilhas = useMemo(() => {
     if (activeFilter === ALL_FILTER) return baseTrilhas;
     return baseTrilhas.filter((t) => trilhaCategory(t) === activeFilter);
   }, [baseTrilhas, activeFilter]);
 
+  // 4. Lógica dinâmica de progresso (buscando a flag concluido da API)
   const totalTrilhas = baseTrilhas.length;
-  const completedTrilhas = 0; // Progress tracking lands with the user_trilha endpoints.
+  const completedTrilhas = baseTrilhas.filter((t: any) => t.concluido).length; 
   const progressPct = totalTrilhas ? Math.round((completedTrilhas / totalTrilhas) * 100) : 0;
 
   return (
@@ -386,6 +407,7 @@ const KnowledgeTrailPage: React.FC = () => {
                     image={DEFAULT_COVER}
                     color={ACCENT_COLORS[i % ACCENT_COLORS.length]}
                     isLocked={false}
+                    isCompleted={(t as any).concluido} // Passando a flag dinâmica de conclusão
                     onClick={() => navigate(`/curso/${t.id_trilha}`)}
                   />
                 ))}
@@ -416,29 +438,30 @@ const KnowledgeTrailPage: React.FC = () => {
             px: { xs: 2, md: 4 },
             display: 'flex', alignItems: 'center',
             gap: { xs: 3, md: 5 },
-            bgcolor: '#ffffff',
+            bgcolor: progressPct === 100 ? '#4caf50' : '#ffffff', // Fica verde se bater 100%
             borderTop: '1px solid rgba(212,195,190,0.4)',
             borderRadius: 0,
             zIndex: 10,
+            transition: 'background-color 0.3s ease',
           }}
         >
           <Box sx={{ flexShrink: 0 }}>
-            <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', opacity: 0.6, letterSpacing: '0.08em', display: 'block', mb: 0.25, fontSize: '10px' }}>
+            <Typography variant="caption" sx={{ fontWeight: 800, color: progressPct === 100 ? 'rgba(255,255,255,0.8)' : 'text.secondary', opacity: progressPct === 100 ? 1 : 0.6, letterSpacing: '0.08em', display: 'block', mb: 0.25, fontSize: '10px' }}>
               TRILHAS CONCLUÍDAS
             </Typography>
-            <Typography variant="subtitle1" sx={{ fontWeight: 900, color: 'primary.main', lineHeight: 1 }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 900, color: progressPct === 100 ? '#ffffff' : 'primary.main', lineHeight: 1 }}>
               {completedTrilhas} / {totalTrilhas}
             </Typography>
           </Box>
 
-          <Box sx={{ width: 1, height: 36, bgcolor: 'rgba(212,195,190,0.5)', flexShrink: 0, display: { xs: 'none', sm: 'block' } }} />
+          <Box sx={{ width: 1, height: 36, bgcolor: progressPct === 100 ? 'rgba(255,255,255,0.3)' : 'rgba(212,195,190,0.5)', flexShrink: 0, display: { xs: 'none', sm: 'block' } }} />
 
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
-              <Typography variant="caption" sx={{ fontWeight: 800, color: 'text.secondary', opacity: 0.6, letterSpacing: '0.08em', fontSize: '10px' }}>
+              <Typography variant="caption" sx={{ fontWeight: 800, color: progressPct === 100 ? 'rgba(255,255,255,0.8)' : 'text.secondary', opacity: progressPct === 100 ? 1 : 0.6, letterSpacing: '0.08em', fontSize: '10px' }}>
                 PROGRESSO GERAL
               </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 900, color: 'secondary.main', fontSize: '10px' }}>
+              <Typography variant="caption" sx={{ fontWeight: 900, color: progressPct === 100 ? '#ffffff' : 'secondary.main', fontSize: '10px' }}>
                 {progressPct}% COMPLETO
               </Typography>
             </Box>
@@ -446,23 +469,33 @@ const KnowledgeTrailPage: React.FC = () => {
               variant="determinate"
               value={progressPct || 5}
               sx={{
-                height: 8, borderRadius: 4, bgcolor: '#e3e2e1',
-                '& .MuiLinearProgress-bar': { bgcolor: 'secondary.main', borderRadius: 4 },
+                height: 8, borderRadius: 4, 
+                bgcolor: progressPct === 100 ? 'rgba(255,255,255,0.2)' : '#e3e2e1',
+                '& .MuiLinearProgress-bar': { 
+                  bgcolor: progressPct === 100 ? '#ffffff' : 'secondary.main', 
+                  borderRadius: 4 
+                },
               }}
             />
           </Box>
 
           <Button
-            variant="contained"
+            variant={progressPct === 100 ? "outlined" : "contained"}
             size="small"
             endIcon={<span className="material-symbols-outlined" style={{ fontSize: 16 }}>chevron_right</span>}
             sx={{
               flexShrink: 0, display: { xs: 'none', md: 'flex' },
-              bgcolor: 'primary.main', color: 'white',
+              bgcolor: progressPct === 100 ? 'transparent' : 'primary.main', 
+              color: progressPct === 100 ? 'white' : 'white',
+              borderColor: progressPct === 100 ? 'white' : 'transparent',
               fontWeight: 800, fontSize: '0.75rem',
               borderRadius: '10px', px: 2.5,
               textTransform: 'none', boxShadow: 'none',
-              '&:hover': { boxShadow: 'none', opacity: 0.9 },
+              '&:hover': { 
+                boxShadow: 'none', 
+                opacity: 0.9,
+                bgcolor: progressPct === 100 ? 'rgba(255,255,255,0.1)' : 'primary.dark'
+              },
             }}
           >
             Continuar
