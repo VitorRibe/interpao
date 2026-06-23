@@ -1,11 +1,10 @@
 import uuid
 from typing import List
-from src.auth.dependencies import ValidateUserAccess
-from src.auth.schemas import ProgressoFuncionario
-from src.auth.use_cases.admin_progresso import GetProgressoEquipeUseCase
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_async_db
+
+from src.auth.dependencies import ValidateUserAccess, ValidateAdminAccess
 from src.auth.schemas import (
     AdminCreateUserRequest,
     AdminCreateUserResponse,
@@ -13,11 +12,12 @@ from src.auth.schemas import (
     AdminUpdateUserResponse,
     AdminListUsersResponse,
     AdminResetPasswordRequest,
+    ProgressoFuncionario
 )
 from src.auth.repositories.auth_repository import AuthRepository
 from src.auth.repositories.setor_repository import SetorRepository
 from src.auth.services.service import AuthService
-from src.auth.dependencies import ValidateAdminAccess
+from src.auth.use_cases.admin_progresso import GetProgressoEquipeUseCase
 from src.auth.use_cases.admin_users import (
     CreateUserAsAdminUseCase,
     ListUsersUseCase,
@@ -51,6 +51,8 @@ async def create_user_admin(
         id_setor=request.id_setor,
         phone=request.phone,
         cargo=request.cargo,
+        is_admin=request.is_admin,           # 👈 Repassado
+        is_superuser=request.is_superuser    # 👈 Repassado
     )
     
     setor_dto = {
@@ -117,7 +119,6 @@ async def get_user_admin(
     user = await auth_repository.get_user_by_id(user_id)
     
     if not user:
-        from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found."
@@ -159,6 +160,8 @@ async def update_user_admin(
         cargo=request.cargo,
         id_setor=request.id_setor,
         is_active=request.is_active,
+        is_admin=request.is_admin,          # 👈 Repassado
+        is_superuser=request.is_superuser   # 👈 Repassado
     )
     
     setor_dto = {
@@ -204,8 +207,6 @@ async def admin_reset_password(
     use_case = AdminResetPasswordUseCase(auth_repository, setor_repository, auth_service)
     
     result = await use_case.execute(user_id)
-    # TODO: Send email with temporary password
-    # await send_temporary_password_email(user.email, temp_password)
     return result
 
 # ==========================================
@@ -227,9 +228,6 @@ async def list_setores_admin(
             for s in setores
         ]
     }
-
-
-# Adicione no final do arquivo router de admin (o primeiro que você mandou)
 
 @router.get("/progresso", response_model=List[ProgressoFuncionario])
 async def get_progresso_equipe(

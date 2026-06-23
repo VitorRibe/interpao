@@ -77,6 +77,8 @@ class AdminCreateUserRequest(BaseModel):
     phone: Optional[str] = None
     cargo: Optional[str] = None
     id_setor: UUID
+    is_admin: bool = False            
+    is_superuser: bool = False       
 
 class AdminCreateUserResponse(BaseModel):
     id: UUID
@@ -94,6 +96,8 @@ class AdminUpdateUserRequest(BaseModel):
     cargo: Optional[str] = None
     id_setor: Optional[UUID] = None
     is_active: Optional[bool] = None
+    is_admin: Optional[bool] = None  
+    is_superuser: Optional[bool] = None
 
 class AdminUpdateUserResponse(BaseModel):
     id: UUID

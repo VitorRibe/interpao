@@ -330,13 +330,18 @@ const DashboardPage: React.FC = () => {
       path: '/trilha',
       accent: '#7f5600',
     },
-    {
-      icon: 'straighten',
-      label: 'Minha Escala',
-      description: 'Consulte seus horários de entrada, saída e folgas da semana.',
-      path: '/escala',
-      accent: '#442a22',
-    },
+    // Exibe "Minha Escala" apenas se NÃO for admin
+    ...(!user?.is_admin
+      ? [
+          {
+            icon: 'straighten',
+            label: 'Minha Escala',
+            description: 'Consulte seus horários de entrada, saída e folgas da semana.',
+            path: '/escala',
+            accent: '#442a22',
+          },
+        ]
+      : []),
     {
       icon: 'menu_book',
       label: 'Receitas',
@@ -463,35 +468,38 @@ const DashboardPage: React.FC = () => {
       </Box>
 
       {/* ── Resume learning ──────────────────────────────────────────────────── */}
-      <Box sx={{ mb: 4 }}>
-        <Typography
-          variant="caption"
-          sx={{
-            fontWeight: 800,
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: 'text.secondary',
-            display: 'block',
-            mb: 1.5,
-          }}
-        >
-          Continuar aprendendo
-        </Typography>
+      {/* Oculta toda a seção de "Continuar Aprendendo" se o usuário for Admin */}
+      {!user?.is_admin && (
+        <Box sx={{ mb: 4 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: 'text.secondary',
+              display: 'block',
+              mb: 1.5,
+            }}
+          >
+            Continuar aprendendo
+          </Typography>
 
-        {trilhasLoading ? (
-          <Skeleton variant="rounded" height={100} sx={{ borderRadius: '16px' }} />
-        ) : lastCourse ? (
-          <ResumeCard
-            course={lastCourse}
-            onContinue={() => navigate(lastCourse.path)}
-          />
-        ) : (
-          <StartLearningCard
-            onClick={() => navigate('/trilha')}
-            hasAnyTrilha={trilhas.length > 0}
-          />
-        )}
-      </Box>
+          {trilhasLoading ? (
+            <Skeleton variant="rounded" height={100} sx={{ borderRadius: '16px' }} />
+          ) : lastCourse ? (
+            <ResumeCard
+              course={lastCourse}
+              onContinue={() => navigate(lastCourse.path)}
+            />
+          ) : (
+            <StartLearningCard
+              onClick={() => navigate('/trilha')}
+              hasAnyTrilha={trilhas.length > 0}
+            />
+          )}
+        </Box>
+      )}
 
       {/* ── Quick access grid ────────────────────────────────────────────────── */}
       <Box>

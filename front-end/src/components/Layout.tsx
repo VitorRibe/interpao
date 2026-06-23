@@ -45,7 +45,10 @@ const Layout: React.FC = () => {
     { label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
     { label: 'Trilha do Conhecimento', icon: 'route', path: '/trilha' },
     { label: 'Receita', icon: 'menu_book', path: '/receita' },
-    { label: 'Escala', icon: 'straighten', path: '/escala' },
+    // Exibe "Escala" apenas se NÃO for admin
+    ...(!user?.is_admin
+      ? [{ label: 'Escala', icon: 'straighten', path: '/escala' }]
+      : []),
     { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
     { label: 'Documentos', icon: 'folder_open', path: '/documentos' },
     ...(canViewAdminPanel

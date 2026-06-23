@@ -21,7 +21,7 @@ class CreateUserAsAdminUseCase:
         self.setor_repository = setor_repository
         self.auth_service = auth_service
 
-    async def execute(self, email, password, name, id_setor, phone=None, cargo=None) -> User:
+    async def execute(self, email, password, name, id_setor, phone=None, cargo=None, is_admin=False, is_superuser=False) -> User:
         setor = await self.setor_repository.get_setor_by_id(id_setor)
         if not setor:
             raise HTTPException(
@@ -44,6 +44,8 @@ class CreateUserAsAdminUseCase:
             phone=phone,
             cargo=cargo,
             hashed_password=hashed,
+            is_admin=is_admin,           # 👈 Injetado no repositório
+            is_superuser=is_superuser    # 👈 Injetado no repositório
         )
         return user
 
@@ -85,6 +87,8 @@ class UpdateUserAsAdminUseCase:
         cargo=None,
         id_setor=None,
         is_active=None,
+        is_admin=None,         # 👈 Recebido do schema
+        is_superuser=None,     # 👈 Recebido do schema
     ) -> User:
         existing_user = await self.auth_repository.get_user_by_id(user_id)
         if not existing_user:
@@ -109,6 +113,7 @@ class UpdateUserAsAdminUseCase:
                     detail="Email already registered",
                 )
 
+        # Atualização dinâmica de dicionário
         fields = {
             "email": email,
             "name": name,
@@ -116,7 +121,10 @@ class UpdateUserAsAdminUseCase:
             "cargo": cargo,
             "id_setor": id_setor,
             "is_active": is_active,
+            "is_admin": is_admin,          # 👈 Adicionado
+            "is_superuser": is_superuser   # 👈 Adicionado
         }
+        
         user = await self.auth_repository.update_user(user_id, **fields)
         if not user:
             raise HTTPException(
