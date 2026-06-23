@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { useSpring, animated } from '@react-spring/web';
-import { useTrilha, useConcluirModulo } from '../hooks/useContent';
+import { useTrilha, useConcluirModulo, useProgresso } from '../hooks/useContent';
 import { saveLastCourse } from './DashboardPage';
 import type { Modulo, Multimidia } from '../types';
 
@@ -47,7 +47,6 @@ const courseTheme = createTheme({
 
 const DEFAULT_HERO = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAimTOmjwW-r9XVjb5AVosuHXuUWZigtEnPcZhJAPBIaXhQAjgljOFeKeWk_K3GpfIoGY9qbYD6R364NS2ITY7SN8By3q5HxE7iVutGcFou1071dHPL9lycbGlsBm8YOeF5wnrhJCmdneEoK-37gID0RqVqQCy9K-OY3L1JM4kFicOFA-6Z9fwQppQhU6K19XtEAmuzgdMESzmCVDZ4ZTOpjg0Fj4tgrOncAIxPTbgFdIuEmUkFnYpnNyD7raSkTjN9er_lN1ogJEA';
 
-// ─── Multimídia icon by type ────────────────────────────────────────────────────
 const mediaIcon = (tipo: string | null): string => {
   switch ((tipo ?? '').toLowerCase()) {
     case 'video':
@@ -104,7 +103,6 @@ const MediaCard: React.FC<{ item: Multimidia }> = ({ item }) => (
   </Paper>
 );
 
-// ─── Chapter body (data-driven módulo) ──────────────────────────────────────────
 const ChapterBody: React.FC<{ modulo: Modulo }> = ({ modulo }) => (
   <>
     {modulo.descricao && (
@@ -137,7 +135,6 @@ const ChapterBody: React.FC<{ modulo: Modulo }> = ({ modulo }) => (
   </>
 );
 
-// ─── Smooth scroll using rAF + easing ──────────────────────────────────────────
 function easeInOutCubic(t: number): number {
   return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 }
@@ -160,7 +157,6 @@ function smoothScrollTo(container: HTMLElement, targetY: number, duration = 700,
   requestAnimationFrame(step);
 }
 
-// ─── Animated sidebar nav item ────────────────────────────────────────────────
 const NavItem: React.FC<{
   number: string;
   title: string;
@@ -206,13 +202,13 @@ const NavItem: React.FC<{
   );
 };
 
-// ─── Main component ───────────────────────────────────────────────────────────
 const CourseContentPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const theme = useTheme();
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
 
   const { data: trilha, isLoading, isError } = useTrilha(id);
+  const { data: progressoInfo } = useProgresso(); // Busca todos os concluídos do usuário logado
   const concluirModuloMutation = useConcluirModulo();
 
   const modulos = trilha?.modulos ?? [];
@@ -222,19 +218,15 @@ const CourseContentPage: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const isAnimating = useRef(false);
 
-  // Estados locais para controle de UI instantânea (loading individual e concluidos)
   const [loadingModuloId, setLoadingModuloId] = useState<string | null>(null);
   const [concluidosLocal, setConcluidosLocal] = useState<Set<string>>(new Set());
 
-  // Atualiza os concluídos locais se a API já retornar dados atualizados
+  // Atualiza o estado local assim que o hook do progresso retornar do backend
   useEffect(() => {
-    const initialConcluidos = new Set<string>();
-    modulos.forEach((m: any) => {
-      // Assumindo que a propriedade 'concluido' possa existir nos dados retornados
-      if (m.concluido) initialConcluidos.add(m.id_modulo);
-    });
-    setConcluidosLocal(prev => new Set([...prev, ...initialConcluidos]));
-  }, [modulos]);
+    if (progressoInfo?.modulos) {
+      setConcluidosLocal(new Set(progressoInfo.modulos));
+    }
+  }, [progressoInfo]);
 
   useEffect(() => {
     if (!activeId && modulos.length > 0) setActiveId(modulos[0].id_modulo);
@@ -282,9 +274,9 @@ const CourseContentPage: React.FC = () => {
     smoothScrollTo(container, to, 700, () => { isAnimating.current = false; });
   }, []);
 
-  // O progresso agora é real, baseado na quantidade de módulos concluídos
-  const progressPct = modulos.length ? (concluidosLocal.size / modulos.length) * 100 : 0;
-  const isTrilha100 = modulos.length > 0 && concluidosLocal.size === modulos.length;
+  const countConcluidosNaTrilha = modulos.filter(m => concluidosLocal.has(m.id_modulo)).length;
+  const progressPct = modulos.length ? (countConcluidosNaTrilha / modulos.length) * 100 : 0;
+  const isTrilha100 = modulos.length > 0 && countConcluidosNaTrilha === modulos.length;
 
   if (isLoading) {
     return (
@@ -330,7 +322,7 @@ const CourseContentPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* ── Progress strip (Dinâmica: Progresso vs 100% Concluída) ── */}
+        {/* ── Progress strip (Dinâmica) ── */}
         {isTrilha100 ? (
           <Box sx={{ bgcolor: '#4caf50', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, px: { xs: 4, md: 6 }, py: 1.5, flexShrink: 0 }}>
             <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#fff' }}>workspace_premium</span>
@@ -345,7 +337,7 @@ const CourseContentPage: React.FC = () => {
             </Typography>
             <LinearProgress variant="determinate" value={progressPct} sx={{ flex: 1, height: 3, borderRadius: 99, bgcolor: 'rgba(255,255,255,0.1)', '& .MuiLinearProgress-bar': { bgcolor: 'secondary.main', borderRadius: 99, transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' } }} />
             <Typography variant="caption" sx={{ color: 'secondary.light', fontWeight: 600, whiteSpace: 'nowrap', fontSize: '0.72rem' }}>
-              {concluidosLocal.size} de {modulos.length} capítulos
+              {countConcluidosNaTrilha} de {modulos.length} capítulos
             </Typography>
           </Box>
         )}
@@ -353,7 +345,6 @@ const CourseContentPage: React.FC = () => {
         {/* ── Body row ── */}
         <Box sx={{ display: 'flex', flex: 1, minHeight: 0 }}>
           
-          {/* ── Scrollable content column ── */}
           <Box ref={scrollRef} sx={{ flex: 1, minWidth: 0, overflowY: 'scroll', bgcolor: '#ffffff', borderRight: isLargeScreen ? '1px solid' : 'none', borderColor: 'divider', scrollbarWidth: 'none', msOverflowStyle: 'none', '&::-webkit-scrollbar': { display: 'none' } }}>
             <Box sx={{ px: { xs: 4, md: 6, xl: 10 }, py: { xs: 5, md: 7 } }}>
               {modulos.length === 0 && (
@@ -401,7 +392,6 @@ const CourseContentPage: React.FC = () => {
                     <Box sx={{ pl: { xs: 0, sm: '76px' } }}>
                       <ChapterBody modulo={modulo} />
                       
-                      {/* ── Ação de Conclusão / Feedback Visual ── */}
                       <Box sx={{ mt: 5, pt: 3, borderTop: '1px dashed', borderColor: 'divider', display: 'flex', justifyContent: 'flex-start' }}>
                         {isModuloCompleted ? (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#4caf50', bgcolor: 'rgba(76,175,80,0.08)', px: 2.5, py: 1.25, borderRadius: 2 }}>
@@ -457,7 +447,6 @@ const CourseContentPage: React.FC = () => {
             </Box>
           </Box>
 
-          {/* ── Fixed sidebar — no scroll ever ── */}
           {isLargeScreen && (
             <Box sx={{ width: 284, flexShrink: 0, bgcolor: 'background.default', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
               <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>

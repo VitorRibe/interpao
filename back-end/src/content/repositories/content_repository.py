@@ -6,11 +6,8 @@ from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.dialects.postgresql import insert
+
 from app.models.content import Modulo, Multimidia, Setor, Trilha, UserModulo, UserTrilha
-
-from app.models.content import Modulo, Multimidia, Setor, Trilha
-
 
 class ContentRepository:
     def __init__(self, db: AsyncSession):
@@ -125,7 +122,6 @@ class ContentRepository:
         await self.db.commit()
 
     async def upsert_user_modulo(self, user_id: uuid.UUID, id_modulo: uuid.UUID) -> None:
-        """Marca um módulo como concluído usando ON CONFLICT (Upsert)"""
         stmt = insert(UserModulo).values(user_id=user_id, id_modulo=id_modulo, concluido=True)
         stmt = stmt.on_conflict_do_update(
             index_elements=['user_id', 'id_modulo'],
@@ -135,9 +131,7 @@ class ContentRepository:
         await self.db.commit()
 
     async def upsert_user_trilha(self, user_id: uuid.UUID, id_trilha: uuid.UUID) -> None:
-        """Marca uma trilha como concluída. Apenas insere o registo se este não existir."""
         stmt = insert(UserTrilha).values(user_id=user_id, id_trilha=id_trilha)
-        # Como UserTrilha não tem coluna 'concluido', usamos DO NOTHING em caso de conflito
         stmt = stmt.on_conflict_do_nothing(
             index_elements=['user_id', 'id_trilha']
         )
@@ -145,14 +139,10 @@ class ContentRepository:
         await self.db.commit()
 
     async def get_progresso_trilha(self, user_id: uuid.UUID, id_trilha: uuid.UUID) -> dict:
-        """Conta o total de módulos da trilha e quantos o utilizador concluiu"""
-        
-        # Total de Módulos da Trilha
         query_total = select(func.count(Modulo.id_modulo)).where(Modulo.id_trilha == id_trilha)
         res_total = await self.db.execute(query_total)
         total_modulos = res_total.scalar() or 0
 
-        # Total de Módulos Concluídos pelo Utilizador nessa Trilha
         query_concluidos = (
             select(func.count(UserModulo.id_modulo))
             .select_from(UserModulo)
@@ -169,4 +159,17 @@ class ContentRepository:
         return {
             "total_modulos": total_modulos,
             "modulos_concluidos": modulos_concluidos
+        }
+
+    async def get_user_progresso_geral(self, user_id: uuid.UUID) -> dict:
+        """Puxa todos os IDs de módulos e trilhas concluídos pelo usuário."""
+        query_modulos = select(UserModulo.id_modulo).where(UserModulo.user_id == user_id, UserModulo.concluido == True)
+        res_modulos = await self.db.execute(query_modulos)
+        
+        query_trilhas = select(UserTrilha.id_trilha).where(UserTrilha.user_id == user_id)
+        res_trilhas = await self.db.execute(query_trilhas)
+
+        return {
+            "modulos": [str(m) for m in res_modulos.scalars().all()],
+            "trilhas": [str(t) for t in res_trilhas.scalars().all()]
         }

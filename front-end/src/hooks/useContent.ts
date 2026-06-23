@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { contentApi } from '../api/content';
+import { contentApi, type ConcluirModuloResponse } from '../api/content';
 import type {
   ModuloCreate,
   ModuloUpdate,
@@ -12,17 +12,16 @@ import type {
 const trilhasKey = ['content', 'trilhas'] as const;
 const trilhaKey = (id: string) => ['content', 'trilha', id] as const;
 const setoresKey = ['content', 'setores'] as const;
-
-// Interface para o retorno da mutação de conclusão
-export interface ConcluirModuloResponse {
-  status: string;
-  id_trilha: string;
-  modulos_totais: number;
-  modulos_concluidos: number;
-  trilha_concluida: boolean;
-}
+const progressoKey = ['content', 'progresso'] as const;
 
 // ─── Queries ───────────────────────────────────────────────────────────────────
+
+export const useProgresso = () =>
+  useQuery({
+    queryKey: progressoKey,
+    queryFn: contentApi.getProgresso,
+    staleTime: 0, // Garante que o progresso está sempre fresco
+  });
 
 export const useTrilhas = () =>
   useQuery({
@@ -43,7 +42,7 @@ export const useSetores = () =>
   useQuery<Setor[]>({
     queryKey: setoresKey,
     queryFn: contentApi.listSetores,
-    staleTime: 1000 * 60 * 60, // Setores raramente mudam, cache de 1 hora
+    staleTime: 1000 * 60 * 60,
   });
 
 // ─── Trilha mutations (admin) ───────────────────────────────────────────────────
@@ -137,11 +136,11 @@ export const useConcluirModulo = () => {
 
   return useMutation<ConcluirModuloResponse, Error, string>({
     mutationFn: async (idModulo: string) => {
-      // Supondo que contentApi.concluirModulo devolva diretamente a resposta (data)
       return contentApi.concluirModulo(idModulo);
     },
     onSuccess: (data) => {
-      // Invalida os caches para forçar a UI a buscar os dados atualizados
+      // Invalida o progresso para forçar as telas a atualizarem os crachás/badges
+      qc.invalidateQueries({ queryKey: progressoKey });
       qc.invalidateQueries({ queryKey: trilhasKey });
       if (data.id_trilha) {
         qc.invalidateQueries({ queryKey: trilhaKey(data.id_trilha) });
