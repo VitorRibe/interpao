@@ -23,7 +23,7 @@ services:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_DB=postgres # 👈 AQUI ESTÁ A CORREÇÃO: Forçando a ler o mesmo DB do Supabase Studio
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SUPABASE_URL=http://rest:3000
@@ -46,7 +46,7 @@ services:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_DB=postgres # 👈 Corrigido aqui também
       - REDIS_HOST=redis
     depends_on:
       - redis
@@ -63,7 +63,7 @@ services:
       - POSTGRES_SERVER=db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-postgres}
+      - POSTGRES_DB=postgres # 👈 Corrigido aqui também
       - REDIS_HOST=redis
     depends_on:
       - redis
