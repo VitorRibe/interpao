@@ -97,14 +97,14 @@ const Row: React.FC<{ row: ProgressoFuncionario }> = ({ row }) => {
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 2, pb: 2, pl: 6 }}>
               <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem' }}>
-                Desempenho por Trilha de Conhecimento
+                Progresso em Trilhas Obrigatórias do Setor
               </Typography>
               
               <Table size="small" aria-label="trilhas">
                 <TableHead>
                   <TableRow>
                     <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'transparent' }}>Trilha</TableCell>
-                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'transparent', textAlign: 'center' }}>Módulos Lido</TableCell>
+                    <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'transparent', textAlign: 'center' }}>Módulos Lidos</TableCell>
                     <TableCell sx={{ fontWeight: 700, color: 'text.secondary', bgcolor: 'transparent', width: '40%' }}>Progresso do Curso</TableCell>
                   </TableRow>
                 </TableHead>
@@ -112,7 +112,7 @@ const Row: React.FC<{ row: ProgressoFuncionario }> = ({ row }) => {
                   {!row.detalhes_trilhas || row.detalhes_trilhas.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={3} sx={{ color: 'text.secondary', fontStyle: 'italic', py: 1.5 }}>
-                        Nenhuma trilha iniciada ou vinculada a este colaborador.
+                        Nenhuma trilha obrigatória vinculada ao setor deste colaborador.
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -166,7 +166,9 @@ const AdminProgressoPage: React.FC = () => {
   const filteredProgresso = useMemo(() => {
     if (!progresso) return [];
     const lowerSearch = search.toLowerCase();
-    return (progresso as unknown as ProgressoFuncionario[]).filter(
+    const progressoArray = Array.isArray(progresso) ? progresso : (progresso as any).users || [];
+    
+    return (progressoArray as ProgressoFuncionario[]).filter(
       (p) =>
         p.nome.toLowerCase().includes(lowerSearch) ||
         p.setor.toLowerCase().includes(lowerSearch)
@@ -200,7 +202,7 @@ const AdminProgressoPage: React.FC = () => {
             Acompanhamento de Equipe
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            Clique em qualquer linha da tabela para analisar o progresso detalhado de cada curso.
+            Visualize inadimplências e progresso detalhado nas trilhas obrigatórias de cada setor.
           </Typography>
         </Box>
 
@@ -223,15 +225,15 @@ const AdminProgressoPage: React.FC = () => {
         />
       </Box>
 
-      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px' }}>
+      <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '12px', overflow: 'hidden' }}>
         <Table aria-label="tabela de progresso da equipe">
           <TableHead sx={{ bgcolor: alpha('#7f5600', 0.04) }}>
             <TableRow>
               <TableCell width="5%" />
               <TableCell sx={{ fontWeight: 800, color: 'primary.main' }}>Colaborador</TableCell>
               <TableCell sx={{ fontWeight: 800, color: 'primary.main' }}>Setor</TableCell>
-              <TableCell sx={{ fontWeight: 800, color: 'primary.main', textAlign: 'center' }}>Cursos Concluídos</TableCell>
-              <TableCell sx={{ fontWeight: 800, color: 'primary.main', width: '35%' }}>Progresso Geral</TableCell>
+              <TableCell sx={{ fontWeight: 800, color: 'primary.main', textAlign: 'center' }}>Trilhas Obrigatórias Concluídas</TableCell>
+              <TableCell sx={{ fontWeight: 800, color: 'primary.main', width: '35%' }}>Progresso Geral (Setor)</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

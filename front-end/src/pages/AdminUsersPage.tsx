@@ -55,14 +55,43 @@ const AdminUsersPage: React.FC = () => {
   const [tempPassword, setTempPassword] = useState<{ name: string; password: string } | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
   const [escalaUser, setEscalaUser] = useState<AdminUser | null>(null);
+  const [copied, setCopied] = useState(false); // Novo estado para feedback visual do botão
 
   const handleResetPassword = async (user: AdminUser) => {
     setResetError(null);
+    setCopied(false);
     try {
       const result = await resetPassword.mutateAsync(user.id);
       setTempPassword({ name: user.name, password: result.temp_password });
     } catch {
       setResetError('Não foi possível redefinir a senha.');
+    }
+  };
+
+  // Função robusta de copiar que funciona com e sem HTTPS
+  const handleCopyToClipboard = async (text: string) => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        // Tenta a API moderna primeiro (HTTPS ou localhost)
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback para HTTP (IP da VPS)
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        // Evita rolar a tela ao focar no textarea invisível
+        textArea.style.position = "fixed";
+        textArea.style.top = "-9999px";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // Reseta o botão após 2 segundos
+    } catch (err) {
+      console.error('Falha ao copiar:', err);
     }
   };
 
@@ -261,7 +290,6 @@ const AdminUsersPage: React.FC = () => {
                           </Tooltip>
 
                           <Tooltip title={user.is_active ? 'Desativar' : 'Já inativo'}>
-                            {/* span wrapper keeps Tooltip working on disabled buttons */}
                             <span>
                               <IconButton
                                 size="small"
@@ -359,12 +387,12 @@ const AdminUsersPage: React.FC = () => {
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             onClick={() => {
-              if (tempPassword) void navigator.clipboard.writeText(tempPassword.password);
+              if (tempPassword) void handleCopyToClipboard(tempPassword.password);
             }}
-            startIcon={<Icon name="content_copy" size={16} />}
-            sx={{ color: 'secondary.main', textTransform: 'none', fontWeight: 700 }}
+            startIcon={<Icon name={copied ? "check" : "content_copy"} size={16} />}
+            sx={{ color: copied ? 'success.main' : 'secondary.main', textTransform: 'none', fontWeight: 700 }}
           >
-            Copiar
+            {copied ? 'Copiado!' : 'Copiar'}
           </Button>
           <Button
             onClick={() => setTempPassword(null)}
