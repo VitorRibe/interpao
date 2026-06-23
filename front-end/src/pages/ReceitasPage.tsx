@@ -36,8 +36,17 @@ const Icon: React.FC<{ name: string; size?: number }> = ({ name, size = 20 }) =>
 
 const ReceitasTab: React.FC = () => {
   const { data: currentUser } = useCurrentUser();
-  const isUserAdmin = currentUser?.setor?.nome?.toLowerCase() === 'administrativo' || currentUser?.is_admin === true;
-  const isAtendimento = currentUser?.setor?.nome?.toLowerCase() === 'atendimento';
+  const setorNome = currentUser?.setor?.nome?.toLowerCase() || '';
+  
+  // Permissão geral de gestão da página
+  const isUserAdmin = setorNome === 'administrativo' || currentUser?.is_admin === true;
+  const isAtendimento = setorNome === 'atendimento';
+  
+  // 🔐 REGRA DE NEGÓCIO CORRIGIDA: Apenas setores "Administrativo" ou "Produção"
+  // Ignorando a flag técnica de sistema 'is_admin' para esta restrição
+  const isProducao = setorNome === 'produção' || setorNome === 'producao';
+  const isAdministrativo = setorNome === 'administrativo';
+  const canViewInstructions = isAdministrativo || isProducao;
 
   const { data: receitas, isLoading, isError } = useReceitas();
   const deleteReceita = useDeleteReceita();
@@ -63,7 +72,6 @@ const ReceitasTab: React.FC = () => {
           placeholder={`Buscar ${isAtendimento ? 'produto' : 'receita'} pelo nome...`}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          // Esta forma é a mais segura para o TypeScript aceitar o InputProps
           slotProps={{
             input: {
               startAdornment: (
@@ -121,7 +129,7 @@ const ReceitasTab: React.FC = () => {
         <Paper sx={{ p: 6, textAlign: 'center', border: '1px dashed rgba(212,195,190,0.6)' }}>
           <Icon name="menu_book" size={44} />
           <Typography variant="subtitle1" sx={{ fontWeight: 800, color: 'primary.main', mt: 1 }}>
-            Nenhum registro encontrado
+            Nenhum registo encontrado
           </Typography>
         </Paper>
       )}
@@ -168,7 +176,8 @@ const ReceitasTab: React.FC = () => {
                 <ItensManager 
                   receitaId={receita.id_receita} 
                   readOnly={!isUserAdmin} 
-                  isAtendimento={isAtendimento} 
+                  isAtendimento={isAtendimento}
+                  canViewInstructions={canViewInstructions} 
                 />
               )}
             </AccordionDetails>

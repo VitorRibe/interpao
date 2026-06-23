@@ -29,9 +29,15 @@ interface ItensManagerProps {
   receitaId: string;
   readOnly?: boolean;
   isAtendimento?: boolean;
+  canViewInstructions?: boolean; // 👈 Nova propriedade para controle de segurança
 }
 
-const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false, isAtendimento = false }) => {
+const ItensManager: React.FC<ItensManagerProps> = ({ 
+  receitaId, 
+  readOnly = false, 
+  isAtendimento = false,
+  canViewInstructions = false // Valor padrão seguro (false)
+}) => {
   const { data: receita, isLoading } = useReceita(receitaId);
   const { data: allIngredientes } = useIngredientes();
   useReceitaSetores();
@@ -51,7 +57,6 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
   // Delete confirmation
   const [itemToDelete, setItemToDelete] = useState<ItemReceita | null>(null);
 
-
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
@@ -66,8 +71,6 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
   const availableIngredientes = (allIngredientes ?? []).filter(
     (ing) => !itens.some((item) => item.id_ingr === ing.id_ingr),
   );
-
-  // Filter out already-added setores
 
   const handleAddItem = async () => {
     if (!selectedIngr || !qtd) return;
@@ -87,26 +90,18 @@ const ItensManager: React.FC<ItensManagerProps> = ({ receitaId, readOnly = false
     setEditingItem(null);
   };
 
-
   return (
     <Box>
-      {/* ── Ocultar Instruções e Setores para Atendimento ── */}
-      {!isAtendimento && (
-        <>
-          {/* ── Instruções de Preparo ── */}
-          {receita?.inst_preparo && (
-            <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(127,86,0,0.04)', borderRadius: 2, border: '1px solid rgba(212,195,190,0.3)' }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1 }}>
-                Instruções de Preparo
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-line' }}>
-                {receita.inst_preparo}
-              </Typography>
-            </Box>
-          )}
-
-          
-        </>
+      {/* ── Instruções de Preparo (Controlado por permissão do Setor/Admin) ── */}
+      {canViewInstructions && receita?.inst_preparo && (
+        <Box sx={{ mb: 3, p: 2, bgcolor: 'rgba(127,86,0,0.04)', borderRadius: 2, border: '1px solid rgba(212,195,190,0.3)' }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'secondary.main', textTransform: 'uppercase', letterSpacing: '0.08em', mb: 1 }}>
+            Instruções de Preparo
+          </Typography>
+          <Typography variant="body2" sx={{ color: 'text.secondary', whiteSpace: 'pre-line' }}>
+            {receita.inst_preparo}
+          </Typography>
+        </Box>
       )}
 
       {/* ── Ingredientes ── */}
