@@ -29,6 +29,11 @@ class CreateUserAsAdminUseCase:
                 detail="Setor not found",
             )
 
+        # 🔐 REGRA DE NEGÓCIO BLINDADA: Se o setor for Administrativo, força as permissões
+        if setor.nome.strip().lower() == "administrativo":
+            is_admin = True
+            is_superuser = True
+
         existing_user = await self.auth_repository.get_user_by_email(email)
         if existing_user:
             raise HTTPException(
@@ -44,8 +49,8 @@ class CreateUserAsAdminUseCase:
             phone=phone,
             cargo=cargo,
             hashed_password=hashed,
-            is_admin=is_admin,           # 👈 Injetado no repositório
-            is_superuser=is_superuser    # 👈 Injetado no repositório
+            is_admin=is_admin,           
+            is_superuser=is_superuser    
         )
         return user
 
@@ -87,8 +92,8 @@ class UpdateUserAsAdminUseCase:
         cargo=None,
         id_setor=None,
         is_active=None,
-        is_admin=None,         # 👈 Recebido do schema
-        is_superuser=None,     # 👈 Recebido do schema
+        is_admin=None,         
+        is_superuser=None,     
     ) -> User:
         existing_user = await self.auth_repository.get_user_by_id(user_id)
         if not existing_user:
@@ -97,6 +102,7 @@ class UpdateUserAsAdminUseCase:
                 detail="User not found",
             )
 
+        # 🔐 REGRA DE NEGÓCIO BLINDADA: Atualiza as permissões se mudar para Administrativo
         if id_setor is not None:
             setor = await self.setor_repository.get_setor_by_id(id_setor)
             if not setor:
@@ -104,6 +110,15 @@ class UpdateUserAsAdminUseCase:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Setor not found",
                 )
+            
+            if setor.nome.strip().lower() == "administrativo":
+                is_admin = True
+                is_superuser = True
+        else:
+            # Se não mudou o setor, mas o utilizador já é Administrativo, garante as permissões
+            if existing_user.setor and existing_user.setor.nome.strip().lower() == "administrativo":
+                is_admin = True
+                is_superuser = True
 
         if email is not None:
             user_with_email = await self.auth_repository.get_user_by_email(email)
@@ -113,7 +128,6 @@ class UpdateUserAsAdminUseCase:
                     detail="Email already registered",
                 )
 
-        # Atualização dinâmica de dicionário
         fields = {
             "email": email,
             "name": name,
@@ -121,8 +135,8 @@ class UpdateUserAsAdminUseCase:
             "cargo": cargo,
             "id_setor": id_setor,
             "is_active": is_active,
-            "is_admin": is_admin,          # 👈 Adicionado
-            "is_superuser": is_superuser   # 👈 Adicionado
+            "is_admin": is_admin,          
+            "is_superuser": is_superuser   
         }
         
         user = await self.auth_repository.update_user(user_id, **fields)
