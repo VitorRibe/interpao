@@ -1,7 +1,5 @@
 import uuid
-
 from fastapi import HTTPException, status
-
 from app.models.content import Modulo, Multimidia, Setor, Trilha
 from src.content.repositories.content_repository import ContentRepository
 from src.content.schemas import (
@@ -16,7 +14,6 @@ from src.content.schemas import (
     TrilhaSummaryDTO,
     TrilhaUpdate,
 )
-
 
 class ContentService:
     def __init__(self, repository: ContentRepository):
@@ -192,8 +189,6 @@ class ContentService:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Trilha not found",
                 )
-            # Reparented to a different trilha without an explicit order:
-            # append it to the end of the target trilha's sequence.
             if data["id_trilha"] != modulo.id_trilha and data.get("ordem") is None:
                 data["ordem"] = await self.repository.get_next_modulo_ordem(
                     data["id_trilha"]
@@ -236,7 +231,6 @@ class ContentService:
         await self.repository.delete_multimidia(id_multimidia)
 
     async def concluir_modulo(self, user_id: uuid.UUID, id_modulo: uuid.UUID) -> dict:
-        # Garante que o módulo existe e obtém a trilha à qual pertence
         modulo = await self.repository.get_modulo(id_modulo)
         if not modulo:
             raise HTTPException(
@@ -245,22 +239,14 @@ class ContentService:
             )
         
         id_trilha = modulo.id_trilha
-
-        # Marca o módulo como concluído no banco
         await self.repository.upsert_user_modulo(user_id=user_id, id_modulo=id_modulo)
 
-        # Se o módulo for órfão (não tiver trilha associada), retorna logo
         if not id_trilha:
-             return {
-                "status": "sucesso",
-                "trilha_concluida": False
-            }
+             return {"status": "sucesso", "trilha_concluida": False}
 
-        # Verifica o progresso da trilha
         progresso = await self.repository.get_progresso_trilha(user_id=user_id, id_trilha=id_trilha)
         trilha_concluida = False
 
-        # Se concluiu tudo, fecha a trilha
         if progresso["total_modulos"] > 0 and progresso["total_modulos"] == progresso["modulos_concluidos"]:
             await self.repository.upsert_user_trilha(user_id=user_id, id_trilha=id_trilha)
             trilha_concluida = True
@@ -272,3 +258,6 @@ class ContentService:
             "modulos_concluidos": progresso["modulos_concluidos"],
             "trilha_concluida": trilha_concluida
         }
+
+    async def get_progresso_usuario(self, user_id: uuid.UUID) -> dict:
+        return await self.repository.get_user_progresso_geral(user_id)

@@ -22,6 +22,14 @@ from src.content.services.service import ContentService
 
 router = APIRouter(prefix="/content", tags=["content"])
 
+@router.get("/progresso")
+async def get_progresso(
+    db: AsyncSession = Depends(get_async_db),
+    user=Depends(ValidateUserAccess),
+):
+    repository = ContentRepository(db)
+    service = ContentService(repository)
+    return await service.get_progresso_usuario(user.id)
 
 @router.get("/setores", response_model=list[SetorDTO])
 async def list_setores(
@@ -32,7 +40,6 @@ async def list_setores(
     service = ContentService(repository)
     return await service.list_setores()
 
-
 @router.get("/trilhas", response_model=list[TrilhaSummaryDTO])
 async def list_trilhas(
     db: AsyncSession = Depends(get_async_db),
@@ -41,7 +48,6 @@ async def list_trilhas(
     repository = ContentRepository(db)
     service = ContentService(repository)
     return await service.list_trilhas()
-
 
 @router.get("/trilhas/{id_trilha}", response_model=TrilhaDTO)
 async def get_trilha(
@@ -52,7 +58,6 @@ async def get_trilha(
     repository = ContentRepository(db)
     service = ContentService(repository)
     return await service.get_trilha(id_trilha)
-
 
 @router.post(
     "/trilhas",
@@ -68,7 +73,6 @@ async def create_trilha(
     service = ContentService(repository)
     return await service.create_trilha(request)
 
-
 @router.put("/trilhas/{id_trilha}", response_model=TrilhaDTO)
 async def update_trilha(
     id_trilha: uuid.UUID,
@@ -79,7 +83,6 @@ async def update_trilha(
     repository = ContentRepository(db)
     service = ContentService(repository)
     return await service.update_trilha(id_trilha, request)
-
 
 @router.delete("/trilhas/{id_trilha}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_trilha(
@@ -92,7 +95,6 @@ async def delete_trilha(
     await service.delete_trilha(id_trilha)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-
 @router.get("/trilhas/{id_trilha}/modulos", response_model=list[ModuloDTO])
 async def list_modulos(
     id_trilha: uuid.UUID,
@@ -102,7 +104,6 @@ async def list_modulos(
     repository = ContentRepository(db)
     service = ContentService(repository)
     return await service.list_modulos(id_trilha)
-
 
 @router.post(
     "/modulos",
@@ -118,7 +119,6 @@ async def create_modulo(
     service = ContentService(repository)
     return await service.create_modulo(request)
 
-
 @router.put("/modulos/{id_modulo}", response_model=ModuloDTO)
 async def update_modulo(
     id_modulo: uuid.UUID,
@@ -129,7 +129,6 @@ async def update_modulo(
     repository = ContentRepository(db)
     service = ContentService(repository)
     return await service.update_modulo(id_modulo, request)
-
 
 @router.delete("/modulos/{id_modulo}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_modulo(
@@ -142,6 +141,18 @@ async def delete_modulo(
     await service.delete_modulo(id_modulo)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
+@router.post(
+    "/modulos/{id_modulo}/concluir",
+    status_code=status.HTTP_200_OK,
+)
+async def concluir_modulo(
+    id_modulo: uuid.UUID,
+    db: AsyncSession = Depends(get_async_db),
+    user=Depends(ValidateUserAccess), 
+):
+    repository = ContentRepository(db)
+    service = ContentService(repository)
+    return await service.concluir_modulo(user_id=user.id, id_modulo=id_modulo)
 
 @router.post(
     "/modulos/{id_modulo}/multimidia",
@@ -157,23 +168,6 @@ async def create_multimidia(
     repository = ContentRepository(db)
     service = ContentService(repository)
     return await service.create_multimidia(id_modulo, request)
-
-@router.post(
-    "/modulos/{id_modulo}/concluir",
-    status_code=status.HTTP_200_OK,
-)
-async def concluir_modulo(
-    id_modulo: uuid.UUID,
-    db: AsyncSession = Depends(get_async_db),
-    user=Depends(ValidateUserAccess), # O Depends que já configurou
-):
-    repository = ContentRepository(db)
-    service = ContentService(repository)
-    
-    # O objeto 'user' retornado por ValidateUserAccess deve conter o ID do utilizador (ex: user.id)
-    # Adapte user.id conforme a estrutura do objeto retornado pela sua dependência
-    return await service.concluir_modulo(user_id=user.id, id_modulo=id_modulo)
-
 
 @router.delete("/multimidia/{id_multimidia}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_multimidia(

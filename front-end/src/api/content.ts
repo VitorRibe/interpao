@@ -9,10 +9,9 @@ import type {
   TrilhaCreate,
   TrilhaSummary,
   TrilhaUpdate,
-  Setor, // <-- Tipagem adicionada aqui
+  Setor,
 } from '../types';
 
-// Tipagem adicionada para refletir a nova resposta do back-end
 export interface ConcluirModuloResponse {
   status: string;
   id_trilha: string;
@@ -21,10 +20,20 @@ export interface ConcluirModuloResponse {
   trilha_concluida: boolean;
 }
 
+export interface UserProgresso {
+  modulos: string[];
+  trilhas: string[];
+}
+
 export const contentApi = {
+  // ── Progresso Global ──
+  getProgresso: async (): Promise<UserProgresso> => {
+    const response = await apiClient.get<UserProgresso>('/content/progresso');
+    return response.data;
+  },
+
   // ── Setores ──
   listSetores: async (): Promise<Setor[]> => {
-    // Atenção: Verifique se a rota na sua API Python é '/setores' ou '/content/setores'
     const response = await apiClient.get<Setor[]>('/content/setores');
     return response.data;
   },
@@ -70,7 +79,6 @@ export const contentApi = {
   },
 
   // ── Progresso do Usuário ──
-  // Agora captura e retorna os dados da mutação
   concluirModulo: async (idModulo: string): Promise<ConcluirModuloResponse> => {
     const response = await apiClient.post<ConcluirModuloResponse>(
       `/content/modulos/${idModulo}/concluir`

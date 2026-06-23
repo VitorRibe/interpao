@@ -12,24 +12,17 @@ import {
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { useMinimumLoadingTime } from '../hooks/useMinimumLoadingTime';
-import { useTrilhas } from '../hooks/useContent';
+import { useTrilhas, useProgresso } from '../hooks/useContent';
 import type { TrilhaSummary } from '../types';
 import KnowledgeTrailSkeleton from '../components/skeletons/KnowledgeTrailSkeleton';
 import SkeletonTransition from '../components/skeletons/SkeletonTransition';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 
-// Fallback cover used while trilhas don't carry their own image field.
-const DEFAULT_COVER =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk';
-
-// Brand palette cycled across cards so each trilha keeps a consistent accent.
+const DEFAULT_COVER = 'https://lh3.googleusercontent.com/aida-public/AB6AXuARrNMPtsQ4KecP43RyGpuu0qpIiCfc0KGVJUrXhpDgVtR6qmlj-z8n91NoxcUztnQdYOV1oBlhV2O4hSJdkQKQ-6v4pfZkzRPV-rOYl9oAn3xnLzFgDddsY1e5RIYAfWAMd9yQVaqj8Gt6FdZuEdmOL_S8apgEqy1cCNtldiLWfxFPfBrB67n-9RSMujriBbvBqxaG4U2BzgOZ6uAfzsvUsfrT-MpO7vA3ajA3s_zTjloxxkHhs--aUlINSdNOJsWy8FCeWkc2Cjk';
 const ACCENT_COLORS = ['#7f5600', '#442a22', '#5d4037', '#6d4a00', '#ffb632'];
-
 const FOOTER_HEIGHT = 80;
-
 const ALL_FILTER = 'VER TUDO';
 
-// ── Shared card component – locked and unlocked have identical DOM structure ──
 interface ModuleCardProps {
   title: string;
   description: string;
@@ -69,10 +62,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
         }),
       }}
     >
-      {/* Thumbnail – always 160 px tall */}
       <Box sx={{ position: 'relative', height: 160, flexShrink: 0, overflow: 'hidden' }}>
-        
-        {/* Badge de Trilha Concluída */}
         {isCompleted && !isLocked && (
           <Box
             sx={{
@@ -140,7 +130,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
         )}
       </Box>
 
-      {/* Body – fixed pixel height so every card is identical */}
       <CardContent
         sx={{
           height: 136,
@@ -151,7 +140,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           '&:last-child': { pb: '20px' },
         }}
       >
-        {/* Title row – 1 line, clipped */}
         <Typography
           noWrap
           variant="subtitle1"
@@ -165,7 +153,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           {title}
         </Typography>
 
-        {/* Description – exactly 2 lines */}
         <Typography
           variant="caption"
           sx={{
@@ -183,7 +170,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
             : description}
         </Typography>
 
-        {/* Footer – pinned to bottom via mt:auto */}
         <Box
           sx={{
             mt: 'auto',
@@ -214,7 +200,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                 endIcon={<span className="material-symbols-outlined" style={{ fontSize: 14 }}>chevron_right</span>}
                 sx={{
                   p: 0, minWidth: 'auto', textTransform: 'none',
-                  color: isCompleted ? '#4caf50' : 'primary.main', // Feedback leve no botão se concluído
+                  color: isCompleted ? '#4caf50' : 'primary.main',
                   fontWeight: 700, fontSize: '0.75rem',
                   '&:hover': { bgcolor: 'transparent' },
                 }}
@@ -229,7 +215,6 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
   );
 };
 
-// ── Map a Trilha DTO onto the card's visual props ──────────────────────────────
 const trilhaCategory = (t: TrilhaSummary) => (t.setor?.nome ?? 'GERAL').toUpperCase();
 
 const trilhaTime = (t: TrilhaSummary) => {
@@ -237,77 +222,54 @@ const trilhaTime = (t: TrilhaSummary) => {
   return `${t.module_count} ${t.module_count === 1 ? 'MÓDULO' : 'MÓDULOS'}`;
 };
 
-// ── Page ──────────────────────────────────────────────────────────────────────
 const KnowledgeTrailPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState(ALL_FILTER);
 
   const { data: currentUser } = useCurrentUser();
   const { data: trilhas, isLoading, isError } = useTrilhas();
+  const { data: progressoInfo } = useProgresso(); // <- Cruza os dados aqui silenciosamente
+  
   const showSkeleton = useMinimumLoadingTime(isLoading, 200);
 
-  // 1. Filtro base da regra de negócio (Admin vê tudo)
   const baseTrilhas = useMemo(() => {
     if (!trilhas) return [];
-
     const userSetorNome = currentUser?.setor?.nome?.toLowerCase();
-    
-    // Bypass: Se o usuário logado for do setor administrativo ou admin, ele vê tudo.
     const isUserAdmin = userSetorNome === 'administrativo' || currentUser?.is_admin === true;
-
-    if (isUserAdmin) {
-      return trilhas;
-    }
+    if (isUserAdmin) return trilhas;
 
     return trilhas.filter((t) => {
       const trilhaSetorNome = t.setor?.nome?.toLowerCase() ?? 'geral';
-
-      // Ignora Administrativo e Escritório para usuários comuns
-      if (trilhaSetorNome === 'administrativo' || trilhaSetorNome === 'escritorio') {
-        return false;
-      }
-
-      // Mostra setor Geral sempre
-      if (trilhaSetorNome === 'geral') {
-        return true;
-      }
-
-      // Mostra se a trilha for do mesmo setor do usuário
-      if (userSetorNome && trilhaSetorNome === userSetorNome) {
-        return true;
-      }
-
+      if (trilhaSetorNome === 'administrativo' || trilhaSetorNome === 'escritorio') return false;
+      if (trilhaSetorNome === 'geral') return true;
+      if (userSetorNome && trilhaSetorNome === userSetorNome) return true;
       return false;
     });
   }, [trilhas, currentUser]);
 
-  // 2. Filtros de UI baseados apenas nas trilhas permitidas
   const filters = useMemo(() => {
     const categories = new Set<string>();
     baseTrilhas.forEach((t) => categories.add(trilhaCategory(t)));
     return [ALL_FILTER, ...Array.from(categories).sort()];
   }, [baseTrilhas]);
 
-  // 3. Trilhas que serão renderizadas na tela
   const filteredTrilhas = useMemo(() => {
     if (activeFilter === ALL_FILTER) return baseTrilhas;
     return baseTrilhas.filter((t) => trilhaCategory(t) === activeFilter);
   }, [baseTrilhas, activeFilter]);
 
-  // 4. Lógica dinâmica de progresso (buscando a flag concluido da API)
   const totalTrilhas = baseTrilhas.length;
-  const completedTrilhas = baseTrilhas.filter((t: any) => t.concluido).length; 
+  // Conta exatamente quantas trilhas exibidas o usuário logado tem concluídas
+  const completedTrilhas = baseTrilhas.filter(t => progressoInfo?.trilhas.includes(t.id_trilha)).length; 
   const progressPct = totalTrilhas ? Math.round((completedTrilhas / totalTrilhas) * 100) : 0;
 
   return (
     <SkeletonTransition showSkeleton={showSkeleton} skeleton={<KnowledgeTrailSkeleton />}>
       <Box sx={{ position: 'relative', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
-        {/* Scrollable content */}
         <Box sx={{ flex: 1, overflowY: 'auto', pt: 3, pb: `${FOOTER_HEIGHT + 24}px` }}>
           <Box sx={{ px: { xs: 2, md: 4 } }}>
 
-            {/* Header */}
             <Paper
               sx={{
                 p: 3, mb: 3,
@@ -353,7 +315,6 @@ const KnowledgeTrailPage: React.FC = () => {
               </Box>
             </Paper>
 
-            {/* Error state */}
             {isError && (
               <Paper sx={{ p: 4, textAlign: 'center', borderRadius: '16px', border: '1px solid rgba(186,26,26,0.2)' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 40, color: '#ba1a1a', opacity: 0.6 }}>
@@ -368,7 +329,6 @@ const KnowledgeTrailPage: React.FC = () => {
               </Paper>
             )}
 
-            {/* Empty state */}
             {!isError && totalTrilhas === 0 && (
               <Paper sx={{ p: 6, textAlign: 'center', borderRadius: '16px', border: '1px dashed rgba(212,195,190,0.6)', bgcolor: 'transparent' }}>
                 <span className="material-symbols-outlined" style={{ fontSize: 44, color: '#7f5600', opacity: 0.4 }}>
@@ -383,7 +343,6 @@ const KnowledgeTrailPage: React.FC = () => {
               </Paper>
             )}
 
-            {/* Grid */}
             {totalTrilhas > 0 && (
               <Box
                 sx={{
@@ -407,7 +366,7 @@ const KnowledgeTrailPage: React.FC = () => {
                     image={DEFAULT_COVER}
                     color={ACCENT_COLORS[i % ACCENT_COLORS.length]}
                     isLocked={false}
-                    isCompleted={(t as any).concluido} // Passando a flag dinâmica de conclusão
+                    isCompleted={progressoInfo?.trilhas.includes(t.id_trilha) ?? false}
                     onClick={() => navigate(`/curso/${t.id_trilha}`)}
                   />
                 ))}
@@ -429,7 +388,6 @@ const KnowledgeTrailPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* Fixed footer */}
         <Paper
           elevation={3}
           sx={{
@@ -438,7 +396,7 @@ const KnowledgeTrailPage: React.FC = () => {
             px: { xs: 2, md: 4 },
             display: 'flex', alignItems: 'center',
             gap: { xs: 3, md: 5 },
-            bgcolor: progressPct === 100 ? '#4caf50' : '#ffffff', // Fica verde se bater 100%
+            bgcolor: progressPct === 100 ? '#4caf50' : '#ffffff', 
             borderTop: '1px solid rgba(212,195,190,0.4)',
             borderRadius: 0,
             zIndex: 10,
