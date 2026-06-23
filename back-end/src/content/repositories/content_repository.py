@@ -5,6 +5,9 @@ from typing import Optional
 from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.dialects.postgresql import insert
+from app.models.content import Modulo, Multimidia, Setor, Trilha, UserModulo, UserTrilha
 
 from app.models.content import Modulo, Multimidia, Setor, Trilha
 
@@ -120,3 +123,50 @@ class ContentRepository:
             delete(Multimidia).where(Multimidia.id_multimidia == id_multimidia)
         )
         await self.db.commit()
+
+    async def upsert_user_modulo(self, user_id: uuid.UUID, id_modulo: uuid.UUID) -> None:
+        """Marca um módulo como concluído usando ON CONFLICT (Upsert)"""
+        stmt = insert(UserModulo).values(user_id=user_id, id_modulo=id_modulo, concluido=True)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['user_id', 'id_modulo'],
+            set_=dict(concluido=True)
+        )
+        await self.db.execute(stmt)
+        await self.db.commit()
+
+    async def upsert_user_trilha(self, user_id: uuid.UUID, id_trilha: uuid.UUID) -> None:
+        """Marca uma trilha como concluída. Apenas insere o registo se este não existir."""
+        stmt = insert(UserTrilha).values(user_id=user_id, id_trilha=id_trilha)
+        # Como UserTrilha não tem coluna 'concluido', usamos DO NOTHING em caso de conflito
+        stmt = stmt.on_conflict_do_nothing(
+            index_elements=['user_id', 'id_trilha']
+        )
+        await self.db.execute(stmt)
+        await self.db.commit()
+
+    async def get_progresso_trilha(self, user_id: uuid.UUID, id_trilha: uuid.UUID) -> dict:
+        """Conta o total de módulos da trilha e quantos o utilizador concluiu"""
+        
+        # Total de Módulos da Trilha
+        query_total = select(func.count(Modulo.id_modulo)).where(Modulo.id_trilha == id_trilha)
+        res_total = await self.db.execute(query_total)
+        total_modulos = res_total.scalar() or 0
+
+        # Total de Módulos Concluídos pelo Utilizador nessa Trilha
+        query_concluidos = (
+            select(func.count(UserModulo.id_modulo))
+            .select_from(UserModulo)
+            .join(Modulo, UserModulo.id_modulo == Modulo.id_modulo)
+            .where(
+                Modulo.id_trilha == id_trilha,
+                UserModulo.user_id == user_id,
+                UserModulo.concluido == True
+            )
+        )
+        res_concluidos = await self.db.execute(query_concluidos)
+        modulos_concluidos = res_concluidos.scalar() or 0
+
+        return {
+            "total_modulos": total_modulos,
+            "modulos_concluidos": modulos_concluidos
+        }

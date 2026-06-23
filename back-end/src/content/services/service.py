@@ -234,3 +234,41 @@ class ContentService:
                 detail="Multimidia not found",
             )
         await self.repository.delete_multimidia(id_multimidia)
+
+    async def concluir_modulo(self, user_id: uuid.UUID, id_modulo: uuid.UUID) -> dict:
+        # Garante que o módulo existe e obtém a trilha à qual pertence
+        modulo = await self.repository.get_modulo(id_modulo)
+        if not modulo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Modulo not found",
+            )
+        
+        id_trilha = modulo.id_trilha
+
+        # Marca o módulo como concluído no banco
+        await self.repository.upsert_user_modulo(user_id=user_id, id_modulo=id_modulo)
+
+        # Se o módulo for órfão (não tiver trilha associada), retorna logo
+        if not id_trilha:
+             return {
+                "status": "sucesso",
+                "trilha_concluida": False
+            }
+
+        # Verifica o progresso da trilha
+        progresso = await self.repository.get_progresso_trilha(user_id=user_id, id_trilha=id_trilha)
+        trilha_concluida = False
+
+        # Se concluiu tudo, fecha a trilha
+        if progresso["total_modulos"] > 0 and progresso["total_modulos"] == progresso["modulos_concluidos"]:
+            await self.repository.upsert_user_trilha(user_id=user_id, id_trilha=id_trilha)
+            trilha_concluida = True
+
+        return {
+            "status": "sucesso",
+            "id_trilha": id_trilha,
+            "modulos_totais": progresso["total_modulos"],
+            "modulos_concluidos": progresso["modulos_concluidos"],
+            "trilha_concluida": trilha_concluida
+        }
