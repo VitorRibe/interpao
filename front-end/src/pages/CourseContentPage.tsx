@@ -222,6 +222,20 @@ const CourseContentPage: React.FC = () => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const isAnimating = useRef(false);
 
+  // Estados locais para controle de UI instantânea (loading individual e concluidos)
+  const [loadingModuloId, setLoadingModuloId] = useState<string | null>(null);
+  const [concluidosLocal, setConcluidosLocal] = useState<Set<string>>(new Set());
+
+  // Atualiza os concluídos locais se a API já retornar dados atualizados
+  useEffect(() => {
+    const initialConcluidos = new Set<string>();
+    modulos.forEach((m: any) => {
+      // Assumindo que a propriedade 'concluido' possa existir nos dados retornados
+      if (m.concluido) initialConcluidos.add(m.id_modulo);
+    });
+    setConcluidosLocal(prev => new Set([...prev, ...initialConcluidos]));
+  }, [modulos]);
+
   useEffect(() => {
     if (!activeId && modulos.length > 0) setActiveId(modulos[0].id_modulo);
   }, [modulos, activeId]);
@@ -268,8 +282,9 @@ const CourseContentPage: React.FC = () => {
     smoothScrollTo(container, to, 700, () => { isAnimating.current = false; });
   }, []);
 
-  const activeIndex = Math.max(0, modulos.findIndex((m) => m.id_modulo === activeId));
-  const progressPct = modulos.length ? ((activeIndex + 1) / modulos.length) * 100 : 0;
+  // O progresso agora é real, baseado na quantidade de módulos concluídos
+  const progressPct = modulos.length ? (concluidosLocal.size / modulos.length) * 100 : 0;
+  const isTrilha100 = modulos.length > 0 && concluidosLocal.size === modulos.length;
 
   if (isLoading) {
     return (
@@ -315,16 +330,25 @@ const CourseContentPage: React.FC = () => {
           </Box>
         </Box>
 
-        {/* ── Progress strip ── */}
-        <Box sx={{ bgcolor: 'primary.main', display: 'flex', alignItems: 'center', gap: 3, px: { xs: 4, md: 6 }, py: 1.25, flexShrink: 0 }}>
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.38)', letterSpacing: '0.13em', textTransform: 'uppercase', whiteSpace: 'nowrap', fontSize: '0.57rem' }}>
-            Seu Progresso
-          </Typography>
-          <LinearProgress variant="determinate" value={progressPct} sx={{ flex: 1, height: 3, borderRadius: 99, bgcolor: 'rgba(255,255,255,0.1)', '& .MuiLinearProgress-bar': { bgcolor: 'secondary.main', borderRadius: 99, transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' } }} />
-          <Typography variant="caption" sx={{ color: 'secondary.light', fontWeight: 600, whiteSpace: 'nowrap', fontSize: '0.72rem' }}>
-            {modulos.length ? `${activeIndex + 1} de ${modulos.length} capítulos` : 'Sem capítulos'}
-          </Typography>
-        </Box>
+        {/* ── Progress strip (Dinâmica: Progresso vs 100% Concluída) ── */}
+        {isTrilha100 ? (
+          <Box sx={{ bgcolor: '#4caf50', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5, px: { xs: 4, md: 6 }, py: 1.5, flexShrink: 0 }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20, color: '#fff' }}>workspace_premium</span>
+            <Typography variant="caption" sx={{ color: '#fff', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 900, fontSize: '0.75rem' }}>
+              Trilha 100% Concluída
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ bgcolor: 'primary.main', display: 'flex', alignItems: 'center', gap: 3, px: { xs: 4, md: 6 }, py: 1.25, flexShrink: 0 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.38)', letterSpacing: '0.13em', textTransform: 'uppercase', whiteSpace: 'nowrap', fontSize: '0.57rem' }}>
+              Seu Progresso
+            </Typography>
+            <LinearProgress variant="determinate" value={progressPct} sx={{ flex: 1, height: 3, borderRadius: 99, bgcolor: 'rgba(255,255,255,0.1)', '& .MuiLinearProgress-bar': { bgcolor: 'secondary.main', borderRadius: 99, transition: 'transform 0.7s cubic-bezier(0.4,0,0.2,1)' } }} />
+            <Typography variant="caption" sx={{ color: 'secondary.light', fontWeight: 600, whiteSpace: 'nowrap', fontSize: '0.72rem' }}>
+              {concluidosLocal.size} de {modulos.length} capítulos
+            </Typography>
+          </Box>
+        )}
 
         {/* ── Body row ── */}
         <Box sx={{ display: 'flex', flex: 1, minHeight: 0 }}>
@@ -342,6 +366,7 @@ const CourseContentPage: React.FC = () => {
 
               {modulos.map((modulo, index) => {
                 const number = String(modulo.ordem ?? index + 1).padStart(2, '0');
+                const isModuloCompleted = concluidosLocal.has(modulo.id_modulo);
                 
                 return (
                   <Box
@@ -376,39 +401,55 @@ const CourseContentPage: React.FC = () => {
                     <Box sx={{ pl: { xs: 0, sm: '76px' } }}>
                       <ChapterBody modulo={modulo} />
                       
+                      {/* ── Ação de Conclusão / Feedback Visual ── */}
                       <Box sx={{ mt: 5, pt: 3, borderTop: '1px dashed', borderColor: 'divider', display: 'flex', justifyContent: 'flex-start' }}>
-                        <Button
-                          variant="contained"
-                          onClick={() => {
-                            concluirModuloMutation.mutate(modulo.id_modulo, {
-                              onSuccess: (response) => {
-                                if (response?.trilha_concluida) {
-                                  alert('Parabéns! Você concluiu todos os módulos desta trilha e seu certificado está liberado!');
-                                }
-                              }
-                            });
-                          }}
-                          disabled={concluirModuloMutation.isPending}
-                          startIcon={
-                            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-                              {concluirModuloMutation.isPending ? 'sync' : 'check_circle'}
-                            </span>
-                          }
-                          sx={{
-                            bgcolor: 'secondary.main',
-                            color: 'white',
-                            fontWeight: 800,
-                            px: 3,
-                            py: 1,
-                            borderRadius: '8px',
-                            textTransform: 'none',
-                            boxShadow: 'none',
-                            '&:hover': { bgcolor: 'secondary.dark', boxShadow: 'none' },
-                          }}
-                        >
-                          {concluirModuloMutation.isPending ? 'Salvando progresso...' : 'Marcar capítulo como lido'}
-                        </Button>
+                        {isModuloCompleted ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#4caf50', bgcolor: 'rgba(76,175,80,0.08)', px: 2.5, py: 1.25, borderRadius: 2 }}>
+                            <span className="material-symbols-outlined" style={{ fontSize: 22 }}>check_circle</span>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 800, textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '0.05em' }}>
+                              Módulo Concluído
+                            </Typography>
+                          </Box>
+                        ) : (
+                          <Button
+                            variant="contained"
+                            onClick={() => {
+                              setLoadingModuloId(modulo.id_modulo);
+                              concluirModuloMutation.mutate(modulo.id_modulo, {
+                                onSuccess: (response) => {
+                                  setLoadingModuloId(null);
+                                  setConcluidosLocal(prev => new Set(prev).add(modulo.id_modulo));
+                                  
+                                  if (response?.trilha_concluida) {
+                                    alert('Parabéns! Você concluiu todos os módulos da Padaria Interpão e seu certificado está liberado!');
+                                  }
+                                },
+                                onError: () => setLoadingModuloId(null)
+                              });
+                            }}
+                            disabled={loadingModuloId === modulo.id_modulo}
+                            startIcon={
+                              <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+                                {loadingModuloId === modulo.id_modulo ? 'sync' : 'check_circle'}
+                              </span>
+                            }
+                            sx={{
+                              bgcolor: 'secondary.main',
+                              color: 'white',
+                              fontWeight: 800,
+                              px: 3,
+                              py: 1,
+                              borderRadius: '8px',
+                              textTransform: 'none',
+                              boxShadow: 'none',
+                              '&:hover': { bgcolor: 'secondary.dark', boxShadow: 'none' },
+                            }}
+                          >
+                            {loadingModuloId === modulo.id_modulo ? 'Salvando...' : 'Marcar capítulo como lido'}
+                          </Button>
+                        )}
                       </Box>
+
                     </Box>
                   </Box>
                 );
@@ -436,13 +477,13 @@ const CourseContentPage: React.FC = () => {
                   ))}
                 </Box>
                 <Box sx={{ flex: 1 }} />
-                <Box sx={{ p: 2.5, borderRadius: 3, border: '2px dashed', borderColor: 'divider', textAlign: 'center', flexShrink: 0 }}>
-                  <WorkspacePremiumIcon sx={{ fontSize: 26, color: 'secondary.main', opacity: 0.3, mb: 0.75, display: 'block', mx: 'auto' }} />
-                  <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', color: 'primary.main', mb: 0.5, fontSize: '0.64rem' }}>
+                <Box sx={{ p: 2.5, borderRadius: 3, border: '2px dashed', borderColor: isTrilha100 ? '#4caf50' : 'divider', bgcolor: isTrilha100 ? 'rgba(76,175,80,0.05)' : 'transparent', textAlign: 'center', flexShrink: 0 }}>
+                  <WorkspacePremiumIcon sx={{ fontSize: 26, color: isTrilha100 ? '#4caf50' : 'secondary.main', opacity: isTrilha100 ? 1 : 0.3, mb: 0.75, display: 'block', mx: 'auto' }} />
+                  <Typography variant="caption" sx={{ fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.12em', display: 'block', color: isTrilha100 ? '#4caf50' : 'primary.main', mb: 0.5, fontSize: '0.64rem' }}>
                     Certificado Disponível
                   </Typography>
                   <Typography variant="caption" sx={{ fontStyle: 'italic', color: 'text.secondary', opacity: 0.62, fontSize: '0.66rem', lineHeight: 1.5 }}>
-                    Conclua todos os tópicos e realize o exame final para emitir seu selo de mestria.
+                    {isTrilha100 ? 'O seu selo de mestria foi desbloqueado com sucesso.' : 'Conclua todos os tópicos para emitir seu selo de mestria.'}
                   </Typography>
                 </Box>
               </Box>
