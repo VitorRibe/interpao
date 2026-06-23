@@ -18,11 +18,9 @@ import {
   Collapse,
   alpha,
 } from '@mui/material';
-// Assumindo que este hook se conecta à API que precisa de correção de lógica
 import { useProgressoEquipe } from '../hooks/useProgressoEquipe';
 
 // ─── Interfaces de Tipagem ───────────────────────────────────────────────────
-// Tipagem permanece igual, assumindo que o Backend enviará apenas trilhas pertinentes
 interface DetalheTrilha {
   trilha_id: string;
   titulo: string;
@@ -36,9 +34,6 @@ interface ProgressoFuncionario {
   nome: string;
   setor: string;
   cargo: string | null;
-  // Sugestão de mudança de semântica mental:
-  // trilhas_concluidas refere-se às concluídas do universo de OBRIGATÓRIAS
-  // total_trilhas refere-se ao total de OBRIGATÓRIAS para o setor
   trilhas_concluidas: number;
   total_trilhas: number;
   progresso_pct: number;
@@ -101,7 +96,6 @@ const Row: React.FC<{ row: ProgressoFuncionario }> = ({ row }) => {
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 2, pb: 2, pl: 6 }}>
-              {/* AJUSTE UX: Título mais específico */}
               <Typography variant="subtitle2" sx={{ fontWeight: 800, color: 'primary.main', mb: 2, textTransform: 'uppercase', letterSpacing: '0.05em', fontSize: '0.75rem' }}>
                 Progresso em Trilhas Obrigatórias do Setor
               </Typography>
@@ -115,7 +109,6 @@ const Row: React.FC<{ row: ProgressoFuncionario }> = ({ row }) => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {/* AJUSTE UX: Mensagem mais clara caso o Backend não retorne nada após filtrar */}
                   {!row.detalhes_trilhas || row.detalhes_trilhas.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={3} sx={{ color: 'text.secondary', fontStyle: 'italic', py: 1.5 }}>
@@ -166,7 +159,6 @@ const Row: React.FC<{ row: ProgressoFuncionario }> = ({ row }) => {
 };
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
-// Este componente permanece logicamente igual, pois depende da correção da API
 const AdminProgressoPage: React.FC = () => {
   const { data: progresso, isLoading, isError } = useProgressoEquipe();
   const [search, setSearch] = useState('');
@@ -174,7 +166,6 @@ const AdminProgressoPage: React.FC = () => {
   const filteredProgresso = useMemo(() => {
     if (!progresso) return [];
     const lowerSearch = search.toLowerCase();
-    // Nota: O backend deve retornar uma estrutura array. Ajuste de cast se necessário.
     const progressoArray = Array.isArray(progresso) ? progresso : (progresso as any).users || [];
     
     return (progressoArray as ProgressoFuncionario[]).filter(
@@ -211,7 +202,6 @@ const AdminProgressoPage: React.FC = () => {
             Acompanhamento de Equipe
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            {/* AJUSTE UX: Texto mais focado em inadimplência obrigatória */}
             Visualize inadimplências e progresso detalhado nas trilhas obrigatórias de cada setor.
           </Typography>
         </Box>
@@ -223,12 +213,14 @@ const AdminProgressoPage: React.FC = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           sx={{ minWidth: 300, bgcolor: 'background.paper', borderRadius: 1 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <span className="material-symbols-outlined" style={{ fontSize: 20 }}>search</span>
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <span className="material-symbols-outlined" style={{ fontSize: 20 }}>search</span>
+                </InputAdornment>
+              ),
+            }
           }}
         />
       </Box>
@@ -240,7 +232,6 @@ const AdminProgressoPage: React.FC = () => {
               <TableCell width="5%" />
               <TableCell sx={{ fontWeight: 800, color: 'primary.main' }}>Colaborador</TableCell>
               <TableCell sx={{ fontWeight: 800, color: 'primary.main' }}>Setor</TableCell>
-              {/* AJUSTE UX: Cabeçalho mais específico */}
               <TableCell sx={{ fontWeight: 800, color: 'primary.main', textAlign: 'center' }}>Trilhas Obrigatórias Concluídas</TableCell>
               <TableCell sx={{ fontWeight: 800, color: 'primary.main', width: '35%' }}>Progresso Geral (Setor)</TableCell>
             </TableRow>

@@ -7,18 +7,17 @@ class GetProgressoEquipeUseCase:
         self.db = db
 
     async def execute(self) -> list[ProgressoFuncionario]:
-        # 1. Procura todas as trilhas e calcula o total de módulos de cada uma (Corrigido para id_trilha e id_modulo)
+        # 1. Procura todas as trilhas, seu setor associado e calcula o total de módulos
         query_trilhas = text("""
-            SELECT t.id_trilha AS trilha_id, t.titulo, COUNT(m.id_modulo) AS total_modulos
+            SELECT t.id_trilha AS trilha_id, t.titulo, t.id_setor, COUNT(m.id_modulo) AS total_modulos
             FROM trilha t
             LEFT JOIN modulo m ON m.id_trilha = t.id_trilha
-            GROUP BY t.id_trilha, t.titulo
+            GROUP BY t.id_trilha, t.titulo, t.id_setor
         """)
         result_trilhas = await self.db.execute(query_trilhas)
         trilhas_dict = {str(row["trilha_id"]): row for row in result_trilhas.mappings().all()}
-        total_trilhas_sistema = len(trilhas_dict)
 
-        # 2. Mapeia a quantidade de módulos concluídos por utilizador em cada trilha (Corrigido para id_modulo)
+        # 2. Mapeia a quantidade de módulos concluídos por utilizador em cada trilha
         query_progresso_modulos = text("""
             SELECT um.user_id, m.id_trilha, COUNT(um.id_modulo) AS concluidos
             FROM user_modulo um
@@ -35,9 +34,9 @@ class GetProgressoEquipeUseCase:
                 progresso_map[uid] = {}
             progresso_map[uid][tid] = row["concluidos"]
 
-        # 3. Procura todos os utilizadores ativos mapeados com os seus setores (Mantido, assumindo que user usa 'id')
+        # 3. Procura todos os utilizadores ativos mapeados com os seus setores (incluindo id_setor para validação)
         query_users = text("""
-            SELECT u.id AS user_id, u.name AS nome, u.cargo, s.nome AS setor
+            SELECT u.id AS user_id, u.name AS nome, u.cargo, s.nome AS setor, u.id_setor
             FROM "user" u
             LEFT JOIN setor s ON u.id_setor = s.id_setor
             WHERE u.is_active = true
@@ -46,18 +45,29 @@ class GetProgressoEquipeUseCase:
         result_users = await self.db.execute(query_users)
         users_rows = result_users.mappings().all()
 
-        # 4. Processa e monta a árvore hierárquica final de resposta
+        # 4. Processa e monta a árvore hierárquica final de resposta filtrando por setor
         resultado = []
         for u in users_rows:
             user_id_str = str(u["user_id"])
+            user_id_setor_str = str(u["id_setor"]) if u["id_setor"] else None
             user_progresso_trilhas = progresso_map.get(user_id_str, {})
             
             detalhes_trilhas = []
             trilhas_concluidas_count = 0
-            total_modulos_sistema = 0
+            total_trilhas_usuario = 0
+            total_modulos_obrigatorios = 0
             total_modulos_concluidos_usuario = 0
 
             for tid, t_data in trilhas_dict.items():
+                trilha_id_setor_str = str(t_data["id_setor"]) if t_data["id_setor"] else None
+                
+                # REGRA DE NEGÓCIO: Ignorar trilhas que pertencem a outro setor (ex: Atendimento não vê Produção)
+                # Trilhas "Gerais" (id_setor is None) aparecem para todo mundo
+                if trilha_id_setor_str is not None and trilha_id_setor_str != user_id_setor_str:
+                    continue
+                
+                total_trilhas_usuario += 1
+                
                 tot_mod = t_data["total_modulos"] or 0
                 mod_concluidos = user_progresso_trilhas.get(tid, 0)
                 
@@ -69,7 +79,7 @@ class GetProgressoEquipeUseCase:
                 if tot_mod > 0 and mod_concluidos == tot_mod:
                     trilhas_concluidas_count += 1
                     
-                total_modulos_sistema += tot_mod
+                total_modulos_obrigatorios += tot_mod
                 total_modulos_concluidos_usuario += mod_concluidos
 
                 detalhes_trilhas.append(DetalheTrilha(
@@ -80,7 +90,8 @@ class GetProgressoEquipeUseCase:
                     progresso_pct=round(pct_trilha, 2)
                 ))
 
-            progresso_geral_pct = (total_modulos_concluidos_usuario / total_modulos_sistema * 100) if total_modulos_sistema > 0 else 0.0
+            # Calcula o progresso global focado estritamente no que o usuário DEVE fazer
+            progresso_geral_pct = (total_modulos_concluidos_usuario / total_modulos_obrigatorios * 100) if total_modulos_obrigatorios > 0 else 0.0
 
             resultado.append(ProgressoFuncionario(
                 user_id=user_id_str,
@@ -88,7 +99,7 @@ class GetProgressoEquipeUseCase:
                 setor=u["setor"] or "Sem Setor",
                 cargo=u["cargo"],
                 trilhas_concluidas=trilhas_concluidas_count,
-                total_trilhas=total_trilhas_sistema,
+                total_trilhas=total_trilhas_usuario,
                 progresso_pct=round(progresso_geral_pct, 2),
                 detalhes_trilhas=detalhes_trilhas
             ))
