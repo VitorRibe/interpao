@@ -115,18 +115,21 @@ class AuthRepository:
         id_setor: uuid.UUID,
         phone: Optional[str] = None,
         cargo: Optional[str] = None,
-        hashed_password: str = ""
+        hashed_password: str = "",
+        is_admin: bool = False,  
+        is_superuser: bool = False  
     ) -> User:
         """Cria um novo usuário no banco de dados local."""
         
-        # Removemos o id=user_id, o banco vai gerar o UUID automaticamente
         new_user = User(
             email=email,
             name=name,
             id_setor=id_setor,
             phone=phone,
             cargo=cargo,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
+            is_admin=is_admin,       
+            is_superuser=is_superuser 
         )
         
         self.db.add(new_user)
