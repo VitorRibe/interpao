@@ -63,7 +63,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
       }}
     >
       <Box sx={{ position: 'relative', height: 160, flexShrink: 0, overflow: 'hidden' }}>
-        {isCompleted && !isLocked && (
+        {isCompleted && !isLocked && !isCert && (
           <Box
             sx={{
               position: 'absolute', top: 12, right: 12, zIndex: 10,
@@ -116,16 +116,18 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
                 background: 'linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 55%)',
               }}
             />
-            <Box
-              sx={{
-                position: 'absolute', bottom: 12, left: 12,
-                bgcolor: color, color: 'white',
-                fontWeight: 800, fontSize: '10px',
-                px: 1, py: 0.5, borderRadius: '4px',
-              }}
-            >
-              {category}
-            </Box>
+            {category && (
+              <Box
+                sx={{
+                  position: 'absolute', bottom: 12, left: 12,
+                  bgcolor: color, color: 'white',
+                  fontWeight: 800, fontSize: '10px',
+                  px: 1, py: 0.5, borderRadius: '4px',
+                }}
+              >
+                {category}
+              </Box>
+            )}
           </>
         )}
       </Box>
@@ -146,7 +148,7 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           sx={{
             fontWeight: 800,
             lineHeight: '24px',
-            color: isLocked ? 'rgba(26,28,28,0.5)' : 'primary.main',
+            color: isLocked ? 'rgba(26,28,28,0.5)' : (isCert ? color : 'primary.main'),
             mb: '6px',
           }}
         >
@@ -188,24 +190,28 @@ const ModuleCard: React.FC<ModuleCardProps> = ({
           ) : (
             <>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <span className="material-symbols-outlined" style={{ fontSize: 14, color: theme.palette.secondary.main }}>
-                  schedule
-                </span>
-                <Typography variant="caption" sx={{ fontWeight: 800, color: 'secondary.main', fontSize: '10px' }}>
-                  {time}
-                </Typography>
+                {time && (
+                  <>
+                    <span className="material-symbols-outlined" style={{ fontSize: 14, color: theme.palette.secondary.main }}>
+                      schedule
+                    </span>
+                    <Typography variant="caption" sx={{ fontWeight: 800, color: 'secondary.main', fontSize: '10px' }}>
+                      {time}
+                    </Typography>
+                  </>
+                )}
               </Box>
               <Button
                 size="small"
                 endIcon={<span className="material-symbols-outlined" style={{ fontSize: 14 }}>chevron_right</span>}
                 sx={{
                   p: 0, minWidth: 'auto', textTransform: 'none',
-                  color: isCompleted ? '#4caf50' : 'primary.main',
+                  color: isCert ? color : (isCompleted ? '#4caf50' : 'primary.main'),
                   fontWeight: 700, fontSize: '0.75rem',
                   '&:hover': { bgcolor: 'transparent' },
                 }}
               >
-                {isCompleted ? 'Revisar' : 'Ver'}
+                {isCert ? 'Emitir' : (isCompleted ? 'Revisar' : 'Ver')}
               </Button>
             </>
           )}
@@ -228,14 +234,20 @@ const KnowledgeTrailPage: React.FC = () => {
 
   const { data: currentUser } = useCurrentUser();
   const { data: trilhas, isLoading, isError } = useTrilhas();
-  const { data: progressoInfo } = useProgresso(); // <- Cruza os dados aqui silenciosamente
+  const { data: progressoInfo } = useProgresso(); 
   
   const showSkeleton = useMinimumLoadingTime(isLoading, 200);
 
   const baseTrilhas = useMemo(() => {
     if (!trilhas) return [];
-    const userSetorNome = currentUser?.setor?.nome?.toLowerCase();
-    const isUserAdmin = userSetorNome === 'administrativo' || currentUser?.is_admin === true;
+    
+    // Leitura segura do usuário contornando o NoInfer do React Query
+    const user = currentUser as any;
+    const userSetorNome = user?.setor?.nome?.toLowerCase();
+    
+    // Abrange as variações de role ou is_admin
+    const isUserAdmin = userSetorNome === 'administrativo' || user?.role === 'admin' || user?.is_admin === true;
+    
     if (isUserAdmin) return trilhas;
 
     return trilhas.filter((t) => {
@@ -259,7 +271,6 @@ const KnowledgeTrailPage: React.FC = () => {
   }, [baseTrilhas, activeFilter]);
 
   const totalTrilhas = baseTrilhas.length;
-  // Conta exatamente quantas trilhas exibidas o usuário logado tem concluídas
   const completedTrilhas = baseTrilhas.filter(t => progressoInfo?.trilhas.includes(t.id_trilha)).length; 
   const progressPct = totalTrilhas ? Math.round((completedTrilhas / totalTrilhas) * 100) : 0;
 
@@ -374,13 +385,14 @@ const KnowledgeTrailPage: React.FC = () => {
                 {activeFilter === ALL_FILTER && (
                   <ModuleCard
                     title="Certificação Final"
-                    description="Complete todos os conteúdos para obter seu certificado."
-                    category=""
+                    description={progressPct === 100 ? "Seu certificado está liberado! Clique para emitir." : "Complete todos os conteúdos para obter seu certificado."}
+                    category="CONQUISTA"
                     time=""
                     image={DEFAULT_COVER}
-                    color=""
-                    isLocked
+                    color={progressPct === 100 ? "#4caf50" : ""}
+                    isLocked={progressPct < 100}
                     isCert
+                    onClick={() => navigate('/certificado')}
                   />
                 )}
               </Box>

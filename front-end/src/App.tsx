@@ -16,6 +16,7 @@ import DocumentsPage from './pages/DocumentsPage';
 import Layout from './components/Layout';
 import RequireAdmin from './components/RequireAdmin';
 import { useCurrentUser } from './hooks/useCurrentUser';
+import CertificatePage from './pages/CertificatePage';
 
 const RequireOfficeOrAdmin = ({ children }: { children: React.ReactNode }) => {
   const { data: user, isLoading } = useCurrentUser();
@@ -51,6 +52,7 @@ function App() {
         <Route path="/escala" element={<EscalaPage />} />
         <Route path="/beneficios" element={<BenefitsPage />} />
         <Route path="/documentos" element={<DocumentsPage />} />
+        <Route path="/certificado" element={<CertificatePage />} />
       </Route>
     </Routes>
   );
