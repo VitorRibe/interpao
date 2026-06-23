@@ -12,11 +12,10 @@ import {
   useMediaQuery,
   createTheme,
   ThemeProvider,
-  //Divider,
 } from '@mui/material';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { useSpring, animated } from '@react-spring/web';
-import { useTrilha, useConcluirModulo } from '../hooks/useContent'; // <-- Hook adicionado aqui
+import { useTrilha, useConcluirModulo } from '../hooks/useContent';
 import { saveLastCourse } from './DashboardPage';
 import type { Modulo, Multimidia } from '../types';
 
@@ -214,7 +213,7 @@ const CourseContentPage: React.FC = () => {
   const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
 
   const { data: trilha, isLoading, isError } = useTrilha(id);
-  const concluirModuloMutation = useConcluirModulo(); // <-- Iniciando o Hook aqui
+  const concluirModuloMutation = useConcluirModulo();
 
   const modulos = trilha?.modulos ?? [];
 
@@ -377,11 +376,18 @@ const CourseContentPage: React.FC = () => {
                     <Box sx={{ pl: { xs: 0, sm: '76px' } }}>
                       <ChapterBody modulo={modulo} />
                       
-                      {/* ── Botão de Concluir Módulo Movido para cá ── */}
                       <Box sx={{ mt: 5, pt: 3, borderTop: '1px dashed', borderColor: 'divider', display: 'flex', justifyContent: 'flex-start' }}>
                         <Button
                           variant="contained"
-                          onClick={() => concluirModuloMutation.mutate(modulo.id_modulo)}
+                          onClick={() => {
+                            concluirModuloMutation.mutate(modulo.id_modulo, {
+                              onSuccess: (response) => {
+                                if (response?.trilha_concluida) {
+                                  alert('Parabéns! Você concluiu todos os módulos desta trilha e seu certificado está liberado!');
+                                }
+                              }
+                            });
+                          }}
                           disabled={concluirModuloMutation.isPending}
                           startIcon={
                             <span className="material-symbols-outlined" style={{ fontSize: 18 }}>

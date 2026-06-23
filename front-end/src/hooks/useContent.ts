@@ -13,6 +13,15 @@ const trilhasKey = ['content', 'trilhas'] as const;
 const trilhaKey = (id: string) => ['content', 'trilha', id] as const;
 const setoresKey = ['content', 'setores'] as const;
 
+// Interface para o retorno da mutação de conclusão
+export interface ConcluirModuloResponse {
+  status: string;
+  id_trilha: string;
+  modulos_totais: number;
+  modulos_concluidos: number;
+  trilha_concluida: boolean;
+}
+
 // ─── Queries ───────────────────────────────────────────────────────────────────
 
 export const useTrilhas = () =>
@@ -126,12 +135,17 @@ export const useDeleteMultimidia = (trilhaId: string) => {
 export const useConcluirModulo = () => {
   const qc = useQueryClient();
 
-  return useMutation({
-    mutationFn: (idModulo: string) => contentApi.concluirModulo(idModulo),
-    onSuccess: () => {
-      // Invalida os caches de conteúdo para atualizar o progresso visual na interface
+  return useMutation<ConcluirModuloResponse, Error, string>({
+    mutationFn: async (idModulo: string) => {
+      // Supondo que contentApi.concluirModulo devolva diretamente a resposta (data)
+      return contentApi.concluirModulo(idModulo);
+    },
+    onSuccess: (data) => {
+      // Invalida os caches para forçar a UI a buscar os dados atualizados
       qc.invalidateQueries({ queryKey: trilhasKey });
-      qc.invalidateQueries({ queryKey: ['content'] });
+      if (data.id_trilha) {
+        qc.invalidateQueries({ queryKey: trilhaKey(data.id_trilha) });
+      }
     },
     onError: (error) => {
       console.error('Erro ao salvar progresso do módulo:', error);

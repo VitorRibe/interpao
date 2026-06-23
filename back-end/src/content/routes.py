@@ -158,6 +158,22 @@ async def create_multimidia(
     service = ContentService(repository)
     return await service.create_multimidia(id_modulo, request)
 
+@router.post(
+    "/modulos/{id_modulo}/concluir",
+    status_code=status.HTTP_200_OK,
+)
+async def concluir_modulo(
+    id_modulo: uuid.UUID,
+    db: AsyncSession = Depends(get_async_db),
+    user=Depends(ValidateUserAccess), # O Depends que já configurou
+):
+    repository = ContentRepository(db)
+    service = ContentService(repository)
+    
+    # O objeto 'user' retornado por ValidateUserAccess deve conter o ID do utilizador (ex: user.id)
+    # Adapte user.id conforme a estrutura do objeto retornado pela sua dependência
+    return await service.concluir_modulo(user_id=user.id, id_modulo=id_modulo)
+
 
 @router.delete("/multimidia/{id_multimidia}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_multimidia(

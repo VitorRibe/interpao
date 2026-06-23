@@ -12,6 +12,15 @@ import type {
   Setor, // <-- Tipagem adicionada aqui
 } from '../types';
 
+// Tipagem adicionada para refletir a nova resposta do back-end
+export interface ConcluirModuloResponse {
+  status: string;
+  id_trilha: string;
+  modulos_totais: number;
+  modulos_concluidos: number;
+  trilha_concluida: boolean;
+}
+
 export const contentApi = {
   // ── Setores ──
   listSetores: async (): Promise<Setor[]> => {
@@ -61,8 +70,12 @@ export const contentApi = {
   },
 
   // ── Progresso do Usuário ──
-  concluirModulo: async (idModulo: string): Promise<void> => {
-    await apiClient.post(`/content/modulos/${idModulo}/concluir`);
+  // Agora captura e retorna os dados da mutação
+  concluirModulo: async (idModulo: string): Promise<ConcluirModuloResponse> => {
+    const response = await apiClient.post<ConcluirModuloResponse>(
+      `/content/modulos/${idModulo}/concluir`
+    );
+    return response.data;
   },
 
   // ── Multimídia ──
