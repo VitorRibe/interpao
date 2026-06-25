@@ -330,7 +330,6 @@ const DashboardPage: React.FC = () => {
       path: '/trilha',
       accent: '#7f5600',
     },
-    // Exibe "Minha Escala" apenas se NÃO for admin
     ...(!user?.is_admin
       ? [
           {
@@ -350,19 +349,23 @@ const DashboardPage: React.FC = () => {
       accent: '#5d4037',
     },
     {
-      icon: 'workspace_premium',
-      label: 'Benefícios',
-      description: 'Veja os benefícios disponíveis para colaboradores da empresa.',
-      path: '/beneficios',
-      accent: '#6d4a00',
-    },
-    {
       icon: 'folder_open',
       label: 'Documentos',
       description: 'Acesse códigos de conduta, manuais e políticas da empresa.',
       path: '/documentos',
       accent: '#8c6b5d',
     },
+    ...(user?.is_admin
+      ? [
+          {
+            icon: 'workspace_premium',
+            label: 'Benefícios',
+            description: 'Veja os benefícios disponíveis para colaboradores da empresa.',
+            path: '/beneficios',
+            accent: '#6d4a00',
+          }
+        ]
+      : []),
     ...(user?.is_admin
       ? [
           {

@@ -45,11 +45,12 @@ const Layout: React.FC = () => {
     { label: 'Dashboard', icon: 'dashboard', path: '/dashboard' },
     { label: 'Trilha do Conhecimento', icon: 'route', path: '/trilha' },
     { label: 'Receita', icon: 'menu_book', path: '/receita' },
-    // Exibe "Escala" apenas se NÃO for admin
     ...(!user?.is_admin
       ? [{ label: 'Escala', icon: 'straighten', path: '/escala' }]
       : []),
-    { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
+    ...(user?.is_admin
+      ? [{ label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' }]
+      : []),
     { label: 'Documentos', icon: 'folder_open', path: '/documentos' },
     ...(canViewAdminPanel
       ? [
@@ -68,7 +69,9 @@ const Layout: React.FC = () => {
     { label: 'Home', icon: 'dashboard', path: '/dashboard' },
     { label: 'Trilha', icon: 'route', path: '/trilha' },
     { label: 'Receitas', icon: 'menu_book', path: '/receita' },
-    { label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' },
+    ...(user?.is_admin
+      ? [{ label: 'Benefícios', icon: 'workspace_premium', path: '/beneficios' }]
+      : []),
     { label: 'Documentos', icon: 'folder_open', path: '/documentos' },
   ];
 
