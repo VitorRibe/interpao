@@ -1,3 +1,4 @@
+from app.models.beneficio import Beneficio, UserBeneficio
 from app.models.company import Company
 from app.models.content import Modulo, Multimidia, Setor, Trilha, UserModulo, UserTrilha
 from app.models.escala import EscalaItem
@@ -6,6 +7,7 @@ from app.models.session import Session
 from app.models.user import User
 
 __all__ = [
+    "Beneficio",
     "Company",
     "EscalaItem",
     "Ingrediente",
@@ -18,6 +20,7 @@ __all__ = [
     "SetorReceita",
     "Trilha",
     "User",
+    "UserBeneficio",
     "UserModulo",
     "UserTrilha",
 ]

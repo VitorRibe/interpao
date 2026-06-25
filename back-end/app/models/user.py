@@ -22,3 +22,4 @@ class User(Base):
     password_reset_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), default=None)
     id_setor: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("setor.id_setor"))
     setor: Mapped[Optional["Setor"]] = relationship("Setor", back_populates="usuarios")
+    beneficios: Mapped[list["UserBeneficio"]] = relationship("UserBeneficio", back_populates="user", cascade="all, delete-orphan")
