@@ -20,13 +20,14 @@ services:
       dockerfile: Dockerfile
     container_name: interpao-api
     environment:
-      - POSTGRES_SERVER=db
+      # Aponta para o nome do contêiner do Supabase para garantir a resolução DNS na rede externa
+      - POSTGRES_SERVER=interpao-supabase-db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=postgres # 👈 AQUI ESTÁ A CORREÇÃO: Forçando a ler o mesmo DB do Supabase Studio
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - SUPABASE_URL=http://rest:3000
+      - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
       - SECRET_KEY=${SECRET_KEY}
     ports:
@@ -43,10 +44,10 @@ services:
     container_name: interpao-worker
     command: ["uv", "run", "celery", "-A", "app.core.celery_app", "worker", "--loglevel=info"]
     environment:
-      - POSTGRES_SERVER=db
+      - POSTGRES_SERVER=interpao-supabase-db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=postgres # 👈 Corrigido aqui também
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - REDIS_HOST=redis
     depends_on:
       - redis
@@ -60,10 +61,10 @@ services:
     container_name: interpao-beat
     command: ["uv", "run", "celery", "-A", "app.core.celery_app", "beat", "--loglevel=info"]
     environment:
-      - POSTGRES_SERVER=db
+      - POSTGRES_SERVER=interpao-supabase-db
       - POSTGRES_USER=${POSTGRES_USER:-postgres}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=postgres # 👈 Corrigido aqui também
+      - POSTGRES_DB=${POSTGRES_DB:-postgres}
       - REDIS_HOST=redis
     depends_on:
       - redis
